@@ -1,0 +1,208 @@
+Turbo Assembler	 Version 4.1	    12/01/25 11:58:04	    Page 1
+main_tri.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8
+      9					 ; mensajes para pedir datos
+     10	0001  0D 0A 4C 61 64 6F	20+	 msg1	db 13, 10, 'Lado 1: ', 0
+     11	      31 3A 20 00
+     12	000C  0D 0A 4C 61 64 6F	20+	 msg2	db 13, 10, 'Lado 2: ', 0
+     13	      32 3A 20 00
+     14	0017  0D 0A 4C 61 64 6F	20+	 msg3	db 13, 10, 'Lado 3: ', 0
+     15	      33 3A 20 00
+     16	0022  0D 0A 54 69 70 6F	20+	 msgRes	db 13, 10, 'Tipo de Triangulo: ', 0
+     17	      64 65 20 54 72 69	61+
+     18	      6E 67 75 6C 6F 3A	20+
+     19	      00
+     20
+     21					 ; respuestas posibles
+     22	0038  45 71 75 69 6C 61	74+	 strEqu	db 'Equilatero', 0
+     23	      65 72 6F 00
+     24	0043  49 73 6F 73 63 65	6C+	 strIso	db 'Isosceles',	0
+     25	      65 73 00
+     26	004D  45 73 63 61 6C 65	6E+	 strEsc	db 'Escaleno', 0
+     27	      6F 00
+     28	0056  4E 6F 20 65 73 20	75+	 strNot	db 'No es un triangulo', 0
+     29	      6E 20 74 72 69 61	6E+
+     30	      67 75 6C 6F 00
+     31
+     32	0069  14*(??)			 buffer	db 20 dup(?)
+     33	007D  ????			 lado1	dw ?
+     34	007F  ????			 lado2	dw ?
+     35	0081  ????			 lado3	dw ?
+     36
+     37	0083			     codeseg
+     38					 ; importamos tus herramientas
+     39					 extrn aputs:proc, agets:proc
+     40					 extrn aatoi:proc
+     41					 ; importamos la logica	del triangulo
+     42					 extrn Ordenar:proc, triang:proc
+     43
+     44	0000			     inicio:
+     45	0000  B8 0000s			 mov ax, @data
+     46	0003  8E D8			 mov ds, ax
+     47	0005  8E C0			 mov es, ax
+     48
+     49					 ; pedir lado 1
+     50	0007  BE 0001r			 mov si, offset	msg1
+     51	000A  E8 0000e			 call aputs
+     52	000D  BF 0069r			 mov di, offset	buffer
+     53	0010  B9 0013			 mov cx, 19
+     54	0013  E8 0000e			 call agets
+     55
+     56					 ; convertir a numero
+     57	0016  BE 0069r			 mov si, offset	buffer
+Turbo Assembler	 Version 4.1	    12/01/25 11:58:04	    Page 2
+main_tri.ASM
+
+
+
+     58	0019  E8 0000e			 call aatoi
+     59	001C  A3 007Dr			 mov [lado1], ax
+     60
+     61					 ; pedir lado 2
+     62	001F  BE 000Cr			 mov si, offset	msg2
+     63	0022  E8 0000e			 call aputs
+     64	0025  BF 0069r			 mov di, offset	buffer
+     65	0028  B9 0013			 mov cx, 19
+     66	002B  E8 0000e			 call agets
+     67
+     68					 ; convertir a numero
+     69	002E  BE 0069r			 mov si, offset	buffer
+     70	0031  E8 0000e			 call aatoi
+     71	0034  A3 007Fr			 mov [lado2], ax
+     72
+     73					 ; pedir lado 3
+     74	0037  BE 0017r			 mov si, offset	msg3
+     75	003A  E8 0000e			 call aputs
+     76	003D  BF 0069r			 mov di, offset	buffer
+     77	0040  B9 0013			 mov cx, 19
+     78	0043  E8 0000e			 call agets
+     79
+     80					 ; convertir a numero
+     81	0046  BE 0069r			 mov si, offset	buffer
+     82	0049  E8 0000e			 call aatoi
+     83	004C  A3 0081r			 mov [lado3], ax
+     84
+     85					 ; cargar valores en registros para operar rapido
+     86	004F  A1 007Dr			 mov ax, [lado1]
+     87	0052  8B 1E 007Fr		 mov bx, [lado2]
+     88	0056  8B 0E 0081r		 mov cx, [lado3]
+     89
+     90	005A  E8 0000e			 call Ordenar	 ; los acomoda de menor	a mayor
+     91	005D  E8 0000e			 call triang	 ; nos dice que	tipo es	en AL
+     92
+     93					 ; guardar el resultado	un momento
+     94	0060  50			 push ax
+     95
+     96					 ; mostrar mensaje de resultado
+     97	0061  BE 0022r			 mov si, offset	msgRes
+     98	0064  E8 0000e			 call aputs
+     99
+    100					 ; recuperar resultado
+    101	0067  58			 pop ax
+    102
+    103					 ; comparar para ver que mensaje imprimimos
+    104	0068  3C 4E			 cmp al, 'N'
+    105	006A  74 0F			 je @@es_no
+    106	006C  3C 45			 cmp al, 'E'
+    107	006E  74 11			 je @@es_equi
+    108	0070  3C 49			 cmp al, 'I'
+    109	0072  74 13			 je @@es_iso
+    110	0074  3C 53			 cmp al, 'S'
+    111	0076  74 15			 je @@es_esc
+    112	0078  EB 1C 90			 jmp @@fin
+    113
+    114	007B			     @@es_no:
+Turbo Assembler	 Version 4.1	    12/01/25 11:58:04	    Page 3
+main_tri.ASM
+
+
+
+    115	007B  BE 0056r			 mov si, offset	strNot
+    116	007E  EB 13 90			 jmp @@imprimir
+    117	0081			     @@es_equi:
+    118	0081  BE 0038r			 mov si, offset	strEqu
+    119	0084  EB 0D 90			 jmp @@imprimir
+    120	0087			     @@es_iso:
+    121	0087  BE 0043r			 mov si, offset	strIso
+    122	008A  EB 07 90			 jmp @@imprimir
+    123	008D			     @@es_esc:
+    124	008D  BE 004Dr			 mov si, offset	strEsc
+    125	0090  EB 01 90			 jmp @@imprimir
+    126
+    127	0093			     @@imprimir:
+    128	0093  E8 0000e			 call aputs	 ; imprime la palabra completa
+    129
+    130	0096			     @@fin:
+    131					 ; salir
+    132	0096  B4 4C			 mov ah, 04Ch
+    133	0098  A0 0000r			 mov al, [codsal]
+    134	009B  CD 21			 int 21h
+    135
+    136				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 11:58:04	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "main_tri"
+??TIME				  Text	 "11:58:04"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@ES_EQUI			  Near	 _TEXT:0081
+@@ES_ESC			  Near	 _TEXT:008D
+@@ES_ISO			  Near	 _TEXT:0087
+@@ES_NO				  Near	 _TEXT:007B
+@@FIN				  Near	 _TEXT:0096
+@@IMPRIMIR			  Near	 _TEXT:0093
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MAIN_TRI
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:0069
+CODSAL				  Byte	 DGROUP:0000
+INICIO				  Near	 _TEXT:0000
+LADO1				  Word	 DGROUP:007D
+LADO2				  Word	 DGROUP:007F
+LADO3				  Word	 DGROUP:0081
+MSG1				  Byte	 DGROUP:0001
+MSG2				  Byte	 DGROUP:000C
+MSG3				  Byte	 DGROUP:0017
+MSGRES				  Byte	 DGROUP:0022
+ORDENAR				  Near	 _TEXT:---- Extern
+STREQU				  Byte	 DGROUP:0038
+STRESC				  Byte	 DGROUP:004D
+STRISO				  Byte	 DGROUP:0043
+STRNOT				  Byte	 DGROUP:0056
+TRIANG				  Near	 _TEXT:---- Extern
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0083 Word	  Public  DATA
+_TEXT				  16  009D Word	  Public  CODE
+

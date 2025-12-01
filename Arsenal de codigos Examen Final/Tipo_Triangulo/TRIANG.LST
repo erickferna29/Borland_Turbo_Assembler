@@ -1,0 +1,126 @@
+Turbo Assembler	 Version 4.1	    12/01/25 11:53:48	    Page 1
+triang.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	Ordenar, triang
+      7
+      8					 ; procedimiento para ordenar los lados
+      9					 ; deja	los valores en ax, bx, cx de menor a mayor
+     10	0000			     proc Ordenar
+     11					 ; checar si ax	es mayor que bx
+     12	0000  3B C3			 cmp ax, bx
+     13	0002  76 01			 jbe @@paso1
+     14	0004  93			 xchg ax, bx	 ; si es mayor,	los cambiamos
+     15	0005			     @@paso1:
+     16
+     17					 ; checar si bx	es mayor que cx
+     18	0005  3B D9			 cmp bx, cx
+     19	0007  76 02			 jbe @@paso2
+     20	0009  87 D9			 xchg bx, cx	 ; cambiamos para que el mayor quede en	cx
+     21	000B			     @@paso2:
+     22
+     23					 ; checar de nuevo el primero con el segundo por si cambio algo
+     24	000B  3B C3			 cmp ax, bx
+     25	000D  76 01			 jbe @@fin_sort
+     26	000F  93			 xchg ax, bx	 ; acomodo final
+     27	0010			     @@fin_sort:
+     28	0010  C3			 ret
+     29	0011			     endp Ordenar
+     30
+     31					 ; procedimiento para saber el tipo de triangulo
+     32					 ; recibe: ax, bx, cx (ya ordenados)
+     33					 ; regresa: al con la letra 'N', 'E', 'I' o 'S'
+     34	0011			     proc triang
+     35	0011  52			 push dx	 ; guardar por si acaso
+     36
+     37					 ; regla de oro: la suma de los	chicos debe ser	mayor al grande
+     38	0012  50			 push ax	 ; guardar ax original
+     39	0013  03 C3			 add ax, bx	 ; sumar los dos chicos
+     40	0015  3B C1			 cmp ax, cx	 ; comparar suma contra	el lado	mayor
+     41	0017  58			 pop ax		 ; recuperar ax
+     42
+     43	0018  77 05			 ja @@es_triangulo ; si	suma > mayor, si se arma
+     44
+     45					 ; si no, no cierra el triangulo
+     46	001A  B0 4E			 mov al, 'N'
+     47	001C  EB 19 90			 jmp @@salir_tri
+     48
+     49	001F			     @@es_triangulo:
+     50					 ; checar equilatero: todos iguales
+     51					 ; como	estan ordenados, basta ver si el chico es igual	al grande
+     52	001F  3B C1			 cmp ax, cx
+     53	0021  75 05			 jne @@checar_iso
+     54	0023  B0 45			 mov al, 'E'
+     55	0025  EB 10 90			 jmp @@salir_tri
+     56
+     57	0028			     @@checar_iso:
+Turbo Assembler	 Version 4.1	    12/01/25 11:53:48	    Page 2
+triang.ASM
+
+
+
+     58					 ; checar isosceles: dos iguales
+     59	0028  3B C3			 cmp ax, bx	 ; son iguales el chico	y el mediano?
+     60	002A  74 09			 je @@es_iso
+     61	002C  3B D9			 cmp bx, cx	 ; son iguales el mediano y el grande?
+     62	002E  74 05			 je @@es_iso
+     63
+     64					 ; si no fue ninguno, es escaleno
+     65	0030  B0 53			 mov al, 'S'
+     66	0032  EB 03 90			 jmp @@salir_tri
+     67
+     68	0035			     @@es_iso:
+     69	0035  B0 49			 mov al, 'I'
+     70
+     71	0037			     @@salir_tri:
+     72	0037  5A			 pop dx
+     73	0038  C3			 ret
+     74	0039			     endp triang
+     75
+     76					 end
+Turbo Assembler	 Version 4.1	    12/01/25 11:53:48	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "triang  "
+??TIME				  Text	 "11:53:48"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CHECAR_ISO			  Near	 _TEXT:0028
+@@ES_ISO			  Near	 _TEXT:0035
+@@ES_TRIANGULO			  Near	 _TEXT:001F
+@@FIN_SORT			  Near	 _TEXT:0010
+@@PASO1				  Near	 _TEXT:0005
+@@PASO2				  Near	 _TEXT:000B
+@@SALIR_TRI			  Near	 _TEXT:0037
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 TRIANG
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ORDENAR				  Near	 _TEXT:0000
+TRIANG				  Near	 _TEXT:0011
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  0039 Word	  Public  CODE
+
