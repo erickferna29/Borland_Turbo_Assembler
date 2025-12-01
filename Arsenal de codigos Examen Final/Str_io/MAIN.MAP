@@ -1,0 +1,11 @@
+Warning: DOSSEG directive ignored in module MAIN.ASM
+Warning: DOSSEG directive ignored in module STR_IO.ASM
+
+ Start  Stop   Length Name               Class
+
+ 00000H 00084H 00085H _TEXT              CODE
+ 00090H 000CBH 0003CH _DATA              DATA
+ 000D0H 001CFH 00100H STACK              STACK
+
+Program entry point at 0000:0000
+

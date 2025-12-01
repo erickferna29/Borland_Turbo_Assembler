@@ -1,0 +1,100 @@
+Turbo Assembler	 Version 4.1	    11/25/25 22:18:00	    Page 1
+astr.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	astrcat, astrcmp
+      7
+      8	0000				 proc astrcat ;CONCATENA DE CADENA SI HACIA CADENA DI
+      9	0000  50			 push ax
+     10	0001  56			 push si
+     11	0002  57			 push di
+     12
+     13	0003  32 C0			 xor al, al
+     14	0005  FC			 cld
+     15
+     16	0006			     @@whi:
+     17	0006  AE			 scasb
+     18	0007  75 FD			 jnz @@whi
+     19
+     20	0009  4F			 dec di
+     21
+     22	000A			     @@do:
+     23	000A  AC			 lodsb
+     24	000B  AA			 stosb
+     25	000C  3C 00			 cmp al, 0
+     26	000E  75 FA			 jne @@do
+     27
+     28	0010			     @@fin:
+     29	0010  5F			 pop di
+     30	0011  5E			 pop si
+     31	0012  58			 pop ax
+     32	0013  C3			 ret
+     33	0014			     endp astrcat
+     34
+     35	0014			     proc astrcmp ;cOMPARA CADENAS SI -	DI
+     36	0014  FC			 cld
+     37
+     38	0015			     @@whi:
+     39	0015  80 3C 00			 cmp [byte si],	0
+     40	0018  74 07			 je @@fin
+     41	001A  A6			 cmpsb
+     42	001B  75 02			 jne @@endwhi
+     43	001D  EB F6			 jmp @@whi
+     44
+     45	001F			     @@endwhi:
+     46	001F  4E			 dec si
+     47	0020  4F			 dec di
+     48
+     49	0021			     @@fin:
+     50	0021  8A 04			 mov al, [byte si]
+     51	0023  2A 05			 sub al, [byte di]
+     52	0025  98			 cbw
+     53	0026  C3			 ret
+     54	0027			     endp astrcmp
+     55
+     56					 end
+Turbo Assembler	 Version 4.1	    11/25/25 22:18:00	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "11/25/25"
+??FILENAME			  Text	 "astr	  "
+??TIME				  Text	 "22:18:00"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@DO				  Near	 _TEXT:000A
+@@ENDWHI			  Near	 _TEXT:001F
+@@FIN				  Near	 _TEXT:0010
+@@FIN				  Near	 _TEXT:0021
+@@WHI				  Near	 _TEXT:0006
+@@WHI				  Near	 _TEXT:0015
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 ASTR
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ASTRCAT				  Near	 _TEXT:0000
+ASTRCMP				  Near	 _TEXT:0014
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  0027 Word	  Public  CODE
+

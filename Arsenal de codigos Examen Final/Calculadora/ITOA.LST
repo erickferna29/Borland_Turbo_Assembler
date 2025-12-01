@@ -1,0 +1,308 @@
+Turbo Assembler	 Version 4.1	    11/25/25 11:58:34	    Page 1
+itoa.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	itoa,ultoa,itoa_hex,itoa_bin
+      7
+      8				     ; PROCEDIMIENTO: ITOA (Integer to ASCII)
+      9				     ; Convierte un numero de 32 bits (DX:AX) a	cadena decimal
+     10				     ; Entrada:	DX:AX =	Numero a convertir
+     11				     ;		DI    =	Buffer donde guardar la	cadena
+     12	0000			     proc itoa
+     13	0000  50			 push ax
+     14	0001  53			 push bx
+     15	0002  51			 push cx
+     16	0003  52			 push dx
+     17	0004  57			 push di
+     18	0005  56			 push si
+     19
+     20					 ; Checar signo	(solo si DX es negativo)
+     21	0006  F7 C2 8000		 test dx, 8000h
+     22	000A  74 0E			 jz @@positivo
+     23
+     24					 ; Es negativo:	Poner '-' y hacer complemento a	2
+     25	000C  C6 05 2D			 mov [byte ptr di], '-'
+     26	000F  47			 inc di
+     27
+     28					 ; Negar DX:AX (Complemento a 2	de 32 bits)
+     29	0010  F7 D2			 not dx
+     30	0012  F7 D0			 not ax
+     31	0014  05 0001			 add ax, 1
+     32	0017  83 D2 00			 adc dx, 0
+     33
+     34	001A			     @@positivo:
+     35	001A  E8 0007			 call ultoa	 ; Convertir la	magnitud sin signo
+     36
+     37	001D  5E			 pop si
+     38	001E  5F			 pop di
+     39	001F  5A			 pop dx
+     40	0020  59			 pop cx
+     41	0021  5B			 pop bx
+     42	0022  58			 pop ax
+     43	0023  C3			 ret
+     44	0024			     endp itoa
+     45
+     46				     ; =================================================================
+     47				     ; SUBRUTINA: ULTOA	(Unsigned Long to ASCII)
+     48				     ; Convierte DX:AX positivo	a cadena en [DI]
+     49				     ; =================================================================
+     50	0024			     proc ultoa
+     51	0024  50			 push ax
+     52	0025  53			 push bx
+     53	0026  51			 push cx
+     54	0027  52			 push dx
+     55	0028  57			 push di
+     56	0029  56			 push si
+     57
+Turbo Assembler	 Version 4.1	    11/25/25 11:58:34	    Page 2
+itoa.ASM
+
+
+
+     58	002A  BB 000A			 mov bx, 10	 ; Divisor = 10
+     59	002D  33 C9			 xor cx, cx	 ; Contador de digitos
+     60
+     61					 ; Caso	especial: Si el	numero es 0
+     62	002F  8B F2			 mov si, dx
+     63	0031  0B F0			 or si,	ax
+     64	0033  75 07			 jnz @@ciclo_div
+     65	0035  C6 05 30			 mov [byte ptr di], '0'
+     66	0038  47			 inc di
+     67	0039  EB 20 90			 jmp @@terminar
+     68
+     69	003C			     @@ciclo_div:
+     70					 ; Division de 32 bits entre 16	bits (DX:AX / BX)
+     71					 ; Truco: Dividir parte	alta, luego parte baja con residuo
+     72	003C  50			 push ax	 ; Guardar parte baja
+     73	003D  8B C2			 mov ax, dx	 ; Mover parte alta a AX para dividir
+     74	003F  33 D2			 xor dx, dx	 ; Limpiar DX
+     75	0041  F7 F3			 div bx		 ; AX =	Alta/10, DX = Residuo Alta
+     76
+     77	0043  8B F0			 mov si, ax	 ; Guardar cociente alto temporalmente
+     78	0045  58			 pop ax		 ; Recuperar parte baja	original
+     79	0046  F7 F3			 div bx		 ; (ResiduoAlta:Baja) /	10
+     80
+     81					 ; Ahora: DX = Residuo final (Digito), AX = Cociente Bajo, SI =	Cociente Alto
+     82	0048  52			 push dx	 ; Guardar digito en pila (salen al reves)
+     83	0049  41			 inc cx		 ; Contar digito
+     84
+     85					 ; Reconstruir el numero para la siguiente vuelta (DX:AX = Cociente)
+     86	004A  8B D6			 mov dx, si	 ; Parte alta nueva
+     87					 ; AX ya tiene la parte	baja nueva
+     88
+     89					 ; Checar si ya	es cero
+     90	004C  8B F2			 mov si, dx
+     91	004E  0B F0			 or si,	ax
+     92	0050  75 EA			 jnz @@ciclo_div ; Si no es cero, repetir
+     93
+     94					 ; Sacar digitos de la pila y guardarlos
+     95	0052			     @@sacar_pila:
+     96	0052  5A			 pop dx		 ; Recuperar digito (0-9)
+     97	0053  80 C2 30			 add dl, '0'	 ; Convertir a ASCII
+     98	0056  88 15			 mov [di], dl	 ; Guardar en buffer
+     99	0058  47			 inc di
+    100	0059  E2 F7			 loop @@sacar_pila
+    101
+    102	005B			     @@terminar:
+    103	005B  C6 05 00			 mov [byte ptr di], 0 ;	Terminador nulo
+    104
+    105	005E  5E			 pop si
+    106	005F  5F			 pop di
+    107	0060  5A			 pop dx
+    108	0061  59			 pop cx
+    109	0062  5B			 pop bx
+    110	0063  58			 pop ax
+    111	0064  C3			 ret
+    112	0065			     endp ultoa
+    113				     ; =================================================================
+    114				     ; PROCEDIMIENTO: ITOA_HEX (Decimal	a Hexadecimal)
+Turbo Assembler	 Version 4.1	    11/25/25 11:58:34	    Page 3
+itoa.ASM
+
+
+
+    115				     ; =================================================================
+    116	0065			     proc itoa_hex
+    117	0065  50			 push ax
+    118	0066  53			 push bx
+    119	0067  51			 push cx
+    120	0068  52			 push dx
+    121	0069  57			 push di
+    122	006A  56			 push si
+    123
+    124	006B  BB 0010			 mov bx, 16	 ; DIVISOR = 16
+    125	006E  33 C9			 xor cx, cx
+    126
+    127					 ; Caso	especial: 0
+    128	0070  8B F2			 mov si, dx
+    129	0072  0B F0			 or si,	ax
+    130	0074  75 07			 jnz @@ciclo_hex
+    131	0076  C6 05 30			 mov [byte ptr di], '0'
+    132	0079  47			 inc di
+    133	007A  EB 2B 90			 jmp @@fin_hex
+    134
+    135	007D			     @@ciclo_hex:
+    136					 ; Division de 32 bits (DX:AX /	16)
+    137	007D  50			 push ax
+    138	007E  8B C2			 mov ax, dx
+    139	0080  33 D2			 xor dx, dx
+    140	0082  F7 F3			 div bx		 ; Dividir Alta
+    141	0084  8B F0			 mov si, ax
+    142	0086  58			 pop ax
+    143	0087  F7 F3			 div bx		 ; Dividir Baja
+    144
+    145	0089  52			 push dx	 ; Guardar residuo (0-15)
+    146	008A  41			 inc cx
+    147
+    148	008B  8B D6			 mov dx, si	 ; Reconstruir numero
+    149	008D  8B F2			 mov si, dx
+    150	008F  0B F0			 or si,	ax
+    151	0091  75 EA			 jnz @@ciclo_hex
+    152
+    153	0093			     @@sacar_hex:
+    154	0093  5A			 pop dx
+    155	0094  80 FA 09			 cmp dl, 9
+    156	0097  77 06			 ja @@es_letra
+    157	0099  80 C2 30			 add dl, '0'
+    158	009C  EB 04 90			 jmp @@guardar
+    159	009F			     @@es_letra:
+    160	009F  80 C2 37			 add dl, 55	 ; 10->'A'
+    161
+    162	00A2			     @@guardar:
+    163	00A2  88 15			 mov [di], dl
+    164	00A4  47			 inc di
+    165	00A5  E2 EC			 loop @@sacar_hex
+    166
+    167	00A7			     @@fin_hex:
+    168	00A7  C6 05 00			 mov [byte ptr di], 0	; Terminador nulo
+    169
+    170	00AA  5E			 pop si
+    171	00AB  5F			 pop di
+Turbo Assembler	 Version 4.1	    11/25/25 11:58:34	    Page 4
+itoa.ASM
+
+
+
+    172	00AC  5A			 pop dx
+    173	00AD  59			 pop cx
+    174	00AE  5B			 pop bx
+    175	00AF  58			 pop ax
+    176	00B0  C3			 ret
+    177	00B1			     endp itoa_hex
+    178
+    179				     ; =================================================================
+    180				     ; PROCEDIMIENTO: ITOA_BIN (Decimal	a Binario)
+    181				     ; =================================================================
+    182	00B1			     proc itoa_bin
+    183	00B1  50			 push ax
+    184	00B2  53			 push bx
+    185	00B3  51			 push cx
+    186	00B4  52			 push dx
+    187	00B5  57			 push di
+    188	00B6  56			 push si
+    189
+    190	00B7  BB 0002			 mov bx, 2	 ; DIVISOR = 2
+    191	00BA  33 C9			 xor cx, cx
+    192
+    193					 ; Caso	especial 0
+    194	00BC  8B F2			 mov si, dx
+    195	00BE  0B F0			 or si,	ax
+    196	00C0  75 07			 jnz @@ciclo_bin
+    197	00C2  C6 05 30			 mov [byte ptr di], '0'
+    198	00C5  47			 inc di
+    199	00C6  EB 20 90			 jmp @@fin_bin
+    200
+    201	00C9			     @@ciclo_bin:
+    202	00C9  50			 push ax
+    203	00CA  8B C2			 mov ax, dx
+    204	00CC  33 D2			 xor dx, dx
+    205	00CE  F7 F3			 div bx
+    206	00D0  8B F0			 mov si, ax
+    207	00D2  58			 pop ax
+    208	00D3  F7 F3			 div bx
+    209
+    210	00D5  52			 push dx	 ; Guardar 0 o 1
+    211	00D6  41			 inc cx
+    212
+    213	00D7  8B D6			 mov dx, si
+    214	00D9  8B F2			 mov si, dx
+    215	00DB  0B F0			 or si,	ax
+    216	00DD  75 EA			 jnz @@ciclo_bin
+    217
+    218	00DF			     @@sacar_bin:
+    219	00DF  5A			 pop dx
+    220	00E0  80 C2 30			 add dl, '0'
+    221	00E3  88 15			 mov [di], dl
+    222	00E5  47			 inc di
+    223	00E6  E2 F7			 loop @@sacar_bin
+    224
+    225	00E8			     @@fin_bin:
+    226	00E8  C6 05 00			 mov [byte ptr di], 0
+    227
+    228	00EB  5E			 pop si
+Turbo Assembler	 Version 4.1	    11/25/25 11:58:34	    Page 5
+itoa.ASM
+
+
+
+    229	00EC  5F			 pop di
+    230	00ED  5A			 pop dx
+    231	00EE  59			 pop cx
+    232	00EF  5B			 pop bx
+    233	00F0  58			 pop ax
+    234	00F1  C3			 ret
+    235	00F2			     endp itoa_bin
+    236				     end
+Turbo Assembler	 Version 4.1	    11/25/25 11:58:34	    Page 6
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "11/25/25"
+??FILENAME			  Text	 "itoa	  "
+??TIME				  Text	 "11:58:34"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CICLO_BIN			  Near	 _TEXT:00C9
+@@CICLO_DIV			  Near	 _TEXT:003C
+@@CICLO_HEX			  Near	 _TEXT:007D
+@@ES_LETRA			  Near	 _TEXT:009F
+@@FIN_BIN			  Near	 _TEXT:00E8
+@@FIN_HEX			  Near	 _TEXT:00A7
+@@GUARDAR			  Near	 _TEXT:00A2
+@@POSITIVO			  Near	 _TEXT:001A
+@@SACAR_BIN			  Near	 _TEXT:00DF
+@@SACAR_HEX			  Near	 _TEXT:0093
+@@SACAR_PILA			  Near	 _TEXT:0052
+@@TERMINAR			  Near	 _TEXT:005B
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 ITOA
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ITOA				  Near	 _TEXT:0000
+ITOA_BIN			  Near	 _TEXT:00B1
+ITOA_HEX			  Near	 _TEXT:0065
+ULTOA				  Near	 _TEXT:0024
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  00F2 Word	  Public  CODE
+

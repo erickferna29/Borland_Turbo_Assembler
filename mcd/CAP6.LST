@@ -1,0 +1,149 @@
+Turbo Assembler	 Version 4.1	    11/06/25 17:49:02	    Page 1
+cap6.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00		     codsal db 0
+      8	0001  ????		     num1 dw ?
+      9	0003  ????		     num2 dw ?
+     10	0005  ????		     denF dw ?
+     11	0007  ????		     numF dw ?
+     12	0009  ????		     mcdF dw ? ; Resultado Final
+     13
+     14	000B			     codeseg
+     15	0000			     inicio:
+     16	0000  B8 0000s		     mov ax, @data ; Inicializa	el
+     17	0003  8E D8		     mov ds, ax	; segmento de datos
+     18
+     19	0005  A1 0001r		     mov ax, [num1]
+     20	0008  8B 16 0003r	     mov dx, [num2]
+     21	000C  E8 0007		     call redfrac
+     22
+     23	000F			     salir: ; en este punto ax y dx ya deberian	estar reducidas
+     24	000F  B4 4C		     mov ah, 04Ch
+     25	0011  A0 0000r		     mov al, [codsal]
+     26	0014  CD 21		     int 21h
+     27
+     28	0016			     proc redfrac
+     29
+     30				     ; Declara las variables locales en	la pila
+     31
+     32	      =0004		      local num: word, den: word = tamVarsLoc
+     33	0016  55		      push bp ;	Preserva BP
+     34	0017  8B EC		      mov bp, sp ; Crea	variables
+     35	0019  83 EC 04		      sub sp, tamVarsLoc ; locales en la pila
+     36	001C  53		      push bx ;	Preserva BX
+     37
+     38				      ;si ax es	mayor que bx, ax sera el numerador
+     39	001D  3B C2		      cmp ax,dx
+     40	001F  77 0D		      ja @@mayor
+     41				      ;de lo contrario bx sera el numerador
+     42	0021  89 56 FE		      mov [num], dx ; num = numerador
+     43	0024  89 46 FC		      mov [den], ax ; den = denominador
+     44	0027  8B D8		      mov bx, ax ; se mueve a bx el valor del denominador porqu	lo ocupara mcd
+     45	0029  8B C2		      mov ax,dx	; el numerador a ax
+     46	002B  EB 09 90		      jmp @@continuar
+     47
+     48	002E			      @@mayor:
+     49	002E  89 46 FE		      mov [num], ax ; num = numerador
+     50	0031  89 56 FC		      mov [den], dx ; den = denominador
+     51	0034  8B DA		      mov bx, dx ; se mueve a bx el valor del denominador porqu	lo ocupara mcd
+     52	0036			      @@continuar:
+     53
+     54	0036  E8 001F		      call mcd ; mcd(ax, bx) =>	ax
+     55
+     56	0039  8B D8		      mov bx, ax ; bx =	MCD
+     57	003B  33 D2		      xor dx, dx ; liberar dx para la division
+Turbo Assembler	 Version 4.1	    11/06/25 17:49:02	    Page 2
+cap6.ASM
+
+
+
+     58	003D  8B 46 FE		      mov ax, [num]
+     59	0040  F7 F3		      div bx
+     60	0042  A3 0007r		      mov [numF],ax
+     61
+     62	0045  8B 46 FC		      mov ax, [den]
+     63	0048  F7 F3		      div bx
+     64	004A  8B D0		      mov dx, ax    ;ASIGNAR VALORES
+     65	004C  A3 0005r		      mov [denF],ax
+     66
+     67	004F  89 1E 0009r	      mov [mcdF],bx ; Guardar el resultado final a esta	variable
+     68
+     69	0053  5B		      pop bx ; Restaura	BX
+     70	0054  8B E5		      mov sp, bp ; Elimina variables
+     71				      ;	locales
+     72	0056  5D		      pop bp ; Restaura	BP
+     73	0057  C3		      ret
+     74
+     75	0058			     endp redfrac
+     76
+     77	0058			     proc mcd
+     78	0058  52		      push dx
+     79	0059			      @@ciclo:
+     80	0059  33 D2		      xor dx, dx ;Eliminar el residuo de la division
+     81	005B  F7 F3		      div bx ;dividir numerador	entre denominador
+     82
+     83	005D  8B C3		      mov ax, bx ; bx es el antiguo divisor que	pasa a ser dividendo
+     84	005F  8B DA		      mov bx, dx ; dx es el residuo anterior pasado como divisor
+     85	0061  83 FB 00		      cmp bx, 0h
+     86	0064  75 F3		      jnz @@ciclo ;mientras bx no sea 0	repetir	el ciclo
+     87	0066  5A		      pop dx
+     88	0067  C3		      ret
+     89	0068			     endp mcd
+     90
+     91				     end inicio
+Turbo Assembler	 Version 4.1	    11/06/25 17:49:02	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "11/06/25"
+??FILENAME			  Text	 "cap6	  "
+??TIME				  Text	 "17:49:02"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CICLO				  Near	 _TEXT:0059
+@@CONTINUAR			  Near	 _TEXT:0036
+@@MAYOR				  Near	 _TEXT:002E
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 CAP6
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+CODSAL				  Byte	 DGROUP:0000
+DEN				  Number [DGROUP:BP-0004]
+DENF				  Word	 DGROUP:0005
+INICIO				  Near	 _TEXT:0000
+MCD				  Near	 _TEXT:0058
+MCDF				  Word	 DGROUP:0009
+NUM				  Number [DGROUP:BP-0002]
+NUM1				  Word	 DGROUP:0001
+NUM2				  Word	 DGROUP:0003
+NUMF				  Word	 DGROUP:0007
+REDFRAC				  Near	 _TEXT:0016
+SALIR				  Near	 _TEXT:000F
+TAMVARSLOC			  Number 0004
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  000B Word	  Public  DATA
+_TEXT				  16  0068 Word	  Public  CODE
+

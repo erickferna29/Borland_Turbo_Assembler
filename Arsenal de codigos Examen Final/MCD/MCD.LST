@@ -1,0 +1,77 @@
+Turbo Assembler	 Version 4.1	    11/23/25 15:41:38	    Page 1
+mcd.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	mcd
+      7
+      8					 ; procedimiento MCD
+      9	0000			     proc mcd
+     10	0000  53			 push bx
+     11	0001  52			 push dx ; Guardamos DX	porque lo usaremos para	el residuo
+     12
+     13					 ; Queremos que	AX sea siempre el dividendo y BX el divisor.
+     14					 ; Usaremos BX en lugar	de DX para la division porque 'div' usa	DX:AX.
+     15
+     16	0002  8B DA			 mov bx, dx	 ; Movemos el segundo numero a BX
+     17
+     18	0004			     @@ciclo:
+     19	0004  83 FB 00			 cmp bx, 0	 ; ?El divisor es 0?
+     20	0007  74 0A			 je @@fin	 ; Si si, terminamos. El MCD esta en AX.
+     21
+     22					 ; Preparar division: DX:AX / BX
+     23	0009  33 D2			 xor dx, dx	 ; Limpiamos parte alta	para division de 16 bits
+     24	000B  F7 F3			 div bx		 ; AX =	Cociente, DX = Residuo
+     25
+     26					 ; Euclides: A = B, B =	Residuo
+     27	000D  8B C3			 mov ax, bx	 ; El viejo divisor (B)	pasa a ser el nuevo dividendo (A)
+     28	000F  8B DA			 mov bx, dx	 ; El residuo pasa a ser el nuevo divisor (B)
+     29
+     30	0011  EB F1			 jmp @@ciclo	 ; Repetir
+     31
+     32	0013			     @@fin:
+     33	0013  5A			 pop dx
+     34	0014  5B			 pop bx
+     35	0015  C3			 ret
+     36	0016			     endp mcd
+     37
+     38					 end
+Turbo Assembler	 Version 4.1	    11/23/25 15:41:38	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "11/23/25"
+??FILENAME			  Text	 "mcd	  "
+??TIME				  Text	 "15:41:38"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CICLO				  Near	 _TEXT:0004
+@@FIN				  Near	 _TEXT:0013
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MCD
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+MCD				  Near	 _TEXT:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  0016 Word	  Public  CODE
+

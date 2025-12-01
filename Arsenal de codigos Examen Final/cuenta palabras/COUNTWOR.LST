@@ -1,0 +1,95 @@
+Turbo Assembler	 Version 4.1	    11/26/25 17:36:11	    Page 1
+countwor.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	countWords
+      7
+      8					 ; procedimiento para contar palabras
+      9	0000				 proc countWords
+     10	0000  56			 push si
+     11	0001  52			 push dx
+     12	0002  53			 push bx	 ; guardamos bx	porque lo usaremos de contador
+     13
+     14	0003  33 DB			 xor bx, bx	 ; contador de palabras	en 0
+     15	0005  32 D2			 xor dl, dl	 ; estado: 0 = fuera, 1	= dentro
+     16
+     17	0007  FC			 cld		 ; leer	hacia adelante
+     18
+     19	0008			     ciclo:
+     20	0008  AC			 lodsb		 ; lee caracter	en al y	avanza si
+     21
+     22					 ; checar fin de cadena
+     23	0009  3C 00			 cmp al, 0
+     24	000B  74 13			 je fin
+     25
+     26					 ; checar si es	espacio
+     27	000D  3C 20			 cmp al, ' '
+     28	000F  74 0B			 je es_espacio
+     29
+     30					 ; es una letra
+     31	0011  80 FA 01			 cmp dl, 1	 ; ya estabamos	dentro de una palabra?
+     32	0014  74 08			 je siguiente	 ; si si, ignorar
+     33
+     34					 ; si no, es nueva palabra
+     35	0016  43			 inc bx		 ; sumamos 1 al	contador
+     36	0017  B2 01			 mov dl, 1	 ; cambiamos estado a dentro
+     37	0019  EB 03 90			 jmp siguiente
+     38
+     39	001C			     es_espacio:
+     40	001C  B2 00			 mov dl, 0	 ; cambiamos estado a fuera
+     41
+     42	001E			     siguiente:
+     43	001E  EB E8			 jmp ciclo
+     44
+     45	0020			     fin:
+     46	0020  8B C3			 mov ax, bx	 ; pasamos el resultado	final a	ax
+     47
+     48	0022  5B			 pop bx		 ; restauramos registros
+     49	0023  5A			 pop dx
+     50	0024  5E			 pop si
+     51	0025  C3			 ret
+     52	0026				 endp countWords
+     53
+     54					 end
+Turbo Assembler	 Version 4.1	    11/26/25 17:36:11	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "11/26/25"
+??FILENAME			  Text	 "countwor"
+??TIME				  Text	 "17:36:11"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 COUNTWOR
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+CICLO				  Near	 _TEXT:0008
+COUNTWORDS			  Near	 _TEXT:0000
+ES_ESPACIO			  Near	 _TEXT:001C
+FIN				  Near	 _TEXT:0020
+SIGUIENTE			  Near	 _TEXT:001E
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  0026 Word	  Public  CODE
+

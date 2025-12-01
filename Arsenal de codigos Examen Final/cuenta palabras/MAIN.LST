@@ -1,0 +1,115 @@
+Turbo Assembler	 Version 4.1	    11/26/25 11:28:14	    Page 1
+main.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  45 73 63 72 69 62	65+	 msg1	db 'Escribe una	frase: ', 0
+      9	      20 75 6E 61 20 66	72+
+     10	      61 73 65 3A 20 00
+     11	0015  0D 0A 54 6F 74 61	6C+	 msg2	db 13, 10, 'Total de palabras: ', 0
+     12	      20 64 65 20 70 61	6C+
+     13	      61 62 72 61 73 3A	20+
+     14	      00
+     15
+     16	002B  64*(??)			 frase	db 100 dup(?)
+     17	008F  0A*(??)			 numStr	db 10 dup(?)
+     18
+     19	0099			     codeseg
+     20				     extrn aputs:proc, agets:proc,itoa:proc,countWords:proc
+     21
+     22	0000			     inicio:
+     23	0000  B8 0000s			 mov ax, @data
+     24	0003  8E D8			 mov ds, ax
+     25	0005  8E C0			 mov es, ax
+     26
+     27					 ; pedir la frase
+     28	0007  BE 0001r			 mov si, offset	msg1
+     29	000A  E8 0000e			 call aputs
+     30
+     31					 ; leer	la frase
+     32	000D  BF 002Br			 mov di, offset	frase
+     33	0010  B9 0063			 mov cx, 99
+     34	0013  E8 0000e			 call agets
+     35
+     36					 ; llamar al modulo de conteo
+     37	0016  BE 002Br			 mov si, offset	frase
+     38	0019  E8 0000e			 call countWords    ; regresa el numero	en ax
+     39
+     40					 ; guardar el numero en	la pila	un momento
+     41	001C  50			 push ax
+     42
+     43					 ; mostrar mensaje resultado
+     44	001D  BE 0015r			 mov si, offset	msg2
+     45	0020  E8 0000e			 call aputs
+     46
+     47					 ; recuperar numero para convertirlo
+     48	0023  58			 pop ax
+     49	0024  33 D2			 xor dx, dx	 ; limpiar parte alta para itoa
+     50	0026  BF 008Fr			 mov di, offset	numStr
+     51	0029  E8 0000e			 call itoa	 ; convierte numero a texto
+     52
+     53					 ; imprimir numero
+     54	002C  BE 008Fr			 mov si, offset	numStr
+     55	002F  E8 0000e			 call aputs
+     56
+     57	0032				 salir:
+Turbo Assembler	 Version 4.1	    11/26/25 11:28:14	    Page 2
+main.ASM
+
+
+
+     58	0032  B4 4C			 mov ah, 04Ch
+     59	0034  A0 0000r			 mov al, [codsal]
+     60	0037  CD 21			 int 21h
+     61
+     62				     end inicio
+Turbo Assembler	 Version 4.1	    11/26/25 11:28:14	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "11/26/25"
+??FILENAME			  Text	 "main	  "
+??TIME				  Text	 "11:28:14"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MAIN
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+CODSAL				  Byte	 DGROUP:0000
+COUNTWORDS			  Near	 _TEXT:---- Extern
+FRASE				  Byte	 DGROUP:002B
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+MSG1				  Byte	 DGROUP:0001
+MSG2				  Byte	 DGROUP:0015
+NUMSTR				  Byte	 DGROUP:008F
+SALIR				  Near	 _TEXT:0032
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0099 Word	  Public  DATA
+_TEXT				  16  0039 Word	  Public  CODE
+

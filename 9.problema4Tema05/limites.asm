@@ -12,6 +12,7 @@ codeseg
 inicio:
     mov ax,@data
     mov ds,ax
+    
     mov bx,[word limite]
     mov cx,[word limite+2]
     
