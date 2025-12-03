@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    11/25/25 12:03:17	    Page 1
+Turbo Assembler	 Version 4.1	    12/02/25 22:29:53	    Page 1
 main.ASM
 
 
@@ -35,7 +35,7 @@ main.ASM
      30	0005  8E C0			 mov es,ax
      31
      32	0007  C6 06 005Er 00		 mov [byte ptr sresul],	0
-     33					 ; 1. Pedir dato - aprender bien a conacatenar cadaebas
+     33					 ; 1. Pedir dato - aprender bien a concatenar cadanas
      34	000C  BE 0001r			 mov si, offset	msg1
      35	000F  E8 0000e			 call aputs
      36
@@ -60,7 +60,7 @@ main.ASM
      55
      56	0032			     divi:
      57	0032  F7 F3		     div bx
-Turbo Assembler	 Version 4.1	    11/25/25 12:03:17	    Page 2
+Turbo Assembler	 Version 4.1	    12/02/25 22:29:53	    Page 2
 main.ASM
 
 
@@ -79,72 +79,69 @@ main.ASM
      69	0043  A3 0081r		     mov [word resul],ax
      70	0046  89 16 0083r	     mov [word resul+2],dx
      71
-     72				     ; =================================================
-     73					 ; CONSTRUCCION	DE LA CADENA (Concatenacion)
-     74					 ; Meta: "15d Fh 1111b"
-     75					 ; =================================================
-     76
-     77					 ; --- 1. DECIMAL ---
-     78					 ; Convertir numero a 'temp'
-     79	004A  BF 004Ar			 mov di, offset	temp
-     80	004D  E8 0000e			 call itoa	     ; temp = "15"
-     81
-     82					 ; Concatenar temp a sresul
-     83	0050  BF 005Er			 mov di, offset	sresul
-     84	0053  BE 004Ar			 mov si, offset	temp
-     85	0056  E8 0000e			 call astrcat	     ; sresul =	"15"
-     86
-     87					 ; Concatenar sufijo "d	"
-     88	0059  BE 0085r			 mov si, offset	sufDec
-     89	005C  E8 0000e			 call astrcat	     ; sresul =	"15d "
-     90
-     91					 ; --- 2. HEXADECIMAL ---
-     92	005F  A1 0081r			 mov ax, [word ptr resul]    ; Recargar	numero
-     93	0062  8B 16 0083r		 mov dx, [word ptr resul+2]
+     72					 ; 4. Formacion	de la cadena
+     73
+     74					 ; decimal
+     75					 ; Convertir numero a temp
+     76	004A  BF 004Ar			 mov di, offset	temp
+     77	004D  E8 0000e			 call itoa
+     78
+     79					 ; Concatenar temp a sresul
+     80	0050  BF 005Er			 mov di, offset	sresul
+     81	0053  BE 004Ar			 mov si, offset	temp
+     82	0056  E8 0000e			 call astrcat
+     83
+     84					 ; Concatenar sufijo d
+     85	0059  BE 0085r			 mov si, offset	sufDec
+     86	005C  E8 0000e			 call astrcat
+     87
+     88					 ; hexa
+     89	005F  A1 0081r			 mov ax, [word ptr resul]
+     90	0062  8B 16 0083r		 mov dx, [word ptr resul+2]
+     91
+     92	0066  BF 004Ar			 mov di, offset	temp
+     93	0069  E8 0000e			 call itoa_hex
      94
-     95	0066  BF 004Ar			 mov di, offset	temp
-     96	0069  E8 0000e			 call itoa_hex	     ; temp = "F"
-     97
-     98	006C  BF 005Er			 mov di, offset	sresul
-     99	006F  BE 004Ar			 mov si, offset	temp
-    100	0072  E8 0000e			 call astrcat	     ; sresul =	"15d F"
+     95	006C  BF 005Er			 mov di, offset	sresul
+     96	006F  BE 004Ar			 mov si, offset	temp
+     97	0072  E8 0000e			 call astrcat
+     98
+     99	0075  BE 0088r			 mov si, offset	sufHex
+    100	0078  E8 0000e			 call astrcat
     101
-    102	0075  BE 0088r			 mov si, offset	sufHex
-    103	0078  E8 0000e			 call astrcat	     ; sresul =	"15d Fh	"
-    104
-    105					 ; --- 3. BINARIO ---
-    106	007B  A1 0081r			 mov ax, [word ptr resul]
-    107	007E  8B 16 0083r		 mov dx, [word ptr resul+2]
+    102					 ;binario
+    103	007B  A1 0081r			 mov ax, [word ptr resul]
+    104	007E  8B 16 0083r		 mov dx, [word ptr resul+2]
+    105
+    106	0082  BF 004Ar			 mov di, offset	temp
+    107	0085  E8 0000e			 call itoa_bin
     108
-    109	0082  BF 004Ar			 mov di, offset	temp
-    110	0085  E8 0000e			 call itoa_bin	     ; temp = "1111"
-    111
-    112	0088  BF 005Er			 mov di, offset	sresul
-    113	008B  BE 004Ar			 mov si, offset	temp
-    114	008E  E8 0000e			 call astrcat	     ; sresul =	"15d Fh	1111"
-Turbo Assembler	 Version 4.1	    11/25/25 12:03:17	    Page 3
+    109	0088  BF 005Er			 mov di, offset	sresul
+    110	008B  BE 004Ar			 mov si, offset	temp
+    111	008E  E8 0000e			 call astrcat
+    112
+    113	0091  BE 008Br			 mov si, offset	sufBin
+    114	0094  E8 0000e			 call astrcat
+Turbo Assembler	 Version 4.1	    12/02/25 22:29:53	    Page 3
 main.ASM
 
 
 
     115
-    116	0091  BE 008Br			 mov si, offset	sufBin
-    117	0094  E8 0000e			 call astrcat	     ; sresul =	"15d Fh	1111b"
-    118
-    119					 ;mostramos el recultado final
-    120	0097  BE 0023r			 mov si, offset	msg2
-    121	009A  E8 0000e			 call aputs
+    116					 ;mostramos el recultado final
+    117	0097  BE 0023r			 mov si, offset	msg2
+    118	009A  E8 0000e			 call aputs
+    119
+    120	009D  BE 005Er			 mov si, offset	sresul ; Imprimimos la cadena final
+    121	00A0  E8 0000e			 call aputs
     122
-    123	009D  BE 005Er			 mov si, offset	sresul ; Imprimimos la cadena maestra
-    124	00A0  E8 0000e			 call aputs
-    125
-    126	00A3			     fin:
-    127	00A3  B4 4C			 mov ah, 04Ch
-    128	00A5  A0 0000r			 mov al,[codsal]
-    129	00A8  CD 21			 int 21h
-    130
-    131				     end inicio
-Turbo Assembler	 Version 4.1	    11/25/25 12:03:17	    Page 4
+    123	00A3			     fin:
+    124	00A3  B4 4C			 mov ah, 04Ch
+    125	00A5  A0 0000r			 mov al,[codsal]
+    126	00A8  CD 21			 int 21h
+    127
+    128				     end inicio
+Turbo Assembler	 Version 4.1	    12/02/25 22:29:53	    Page 4
 Symbol Table
 
 
@@ -152,9 +149,9 @@ Symbol Table
 
 Symbol Name			  Type	 Value
 
-??DATE				  Text	 "11/25/25"
+??DATE				  Text	 "12/02/25"
 ??FILENAME			  Text	 "main	  "
-??TIME				  Text	 "12:03:17"
+??TIME				  Text	 "22:29:53"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @CODE				  Text	 _TEXT

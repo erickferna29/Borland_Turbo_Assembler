@@ -1,0 +1,141 @@
+Turbo Assembler	 Version 4.1	    12/01/25 23:18:14	    Page 1
+bisiesto.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  45 73 63 72 69 62	65+	 msg1	db 'Escribe el anio: ',	0
+      9	      20 65 6C 20 61 6E	69+
+     10	      6F 3A 20 00
+     11	0013  0D 0A 73 69 2C 20	65+	 msgSi	db 13, 10, 'si,	es Bisiesto', 0
+     12	      73 20 42 69 73 69	65+
+     13	      73 74 6F 00
+     14	0025  0D 0A 4E 6F 2C 20	6E+	 msgNo	db 13, 10, 'No,	no es Bisiesto', 0
+     15	      6F 20 65 73 20 42	69+
+     16	      73 69 65 73 74 6F	00
+     17
+     18	003A  14*(??)			 buffer	db 20 dup(?)
+     19	004E  ????			 anho	dw ?
+     20
+     21	0050			     codeseg
+     22					 extrn aputs:proc, agets:proc, aatoi:proc
+     23
+     24	0000			     inicio:
+     25	0000  B8 0000s			 mov ax, @data
+     26	0003  8E D8			 mov ds, ax
+     27	0005  8E C0			 mov es, ax
+     28
+     29					 ; pedir el anio
+     30	0007  BE 0001r			 mov si, offset	msg1
+     31	000A  E8 0000e			 call aputs
+     32
+     33	000D  BF 003Ar			 mov di, offset	buffer
+     34	0010  B9 0013			 mov cx, 19
+     35	0013  E8 0000e			 call agets
+     36
+     37	0016  BE 003Ar			 mov si, offset	buffer
+     38	0019  E8 0000e			 call aatoi	     ; convierte texto a numero	en ax
+     39	001C  A3 004Er			 mov [anho], ax	     ; guardamos el anio
+     40
+     41					 ; --- tu logica de oro	(4 -> 100 -> 400) ---
+     42
+     43					 ; paso	1: divisible entre 4?
+     44	001F  A1 004Er			 mov ax, [anho]
+     45	0022  33 D2			 xor dx, dx	     ; limpiar dx para division
+     46	0024  BB 0004			 mov bx, 4
+     47	0027  F7 F3			 div bx		     ; dx tiene	el residuo
+     48
+     49	0029  83 FA 00			 cmp dx, 0
+     50	002C  75 27			 jne no_es	     ; si sobra	algo, no es bisiesto
+     51
+     52					 ; paso	2: divisible entre 100?
+     53	002E  A1 004Er			 mov ax, [anho]
+     54	0031  33 D2			 xor dx, dx
+     55	0033  BB 0064			 mov bx, 100
+     56	0036  F7 F3			 div bx
+     57
+Turbo Assembler	 Version 4.1	    12/01/25 23:18:14	    Page 2
+bisiesto.ASM
+
+
+
+     58	0038  83 FA 00			 cmp dx, 0
+     59	003B  75 0F			 jne si_es	     ; si es div entre 4 pero NO entre 100, es bisiesto	(ej. 2024)
+     60
+     61					 ; paso	3: divisible entre 400?
+     62					 ; (si llego aqui es porque es div entre 100, como 1900	o 2000)
+     63	003D  A1 004Er			 mov ax, [anho]
+     64	0040  33 D2			 xor dx, dx
+     65	0042  BB 0190			 mov bx, 400
+     66	0045  F7 F3			 div bx
+     67
+     68	0047  83 FA 00			 cmp dx, 0
+     69	004A  75 09			 jne no_es	     ; si es div entre 100 pero	NO entre 400, no es (ej. 1900)
+     70
+     71					 ; si llego aqui, es divisible entre 400 (ej. 2000) -> si es
+     72
+     73	004C			     si_es:
+     74	004C  BE 0013r			 mov si, offset	msgSi
+     75	004F  E8 0000e			 call aputs
+     76	0052  EB 07 90			 jmp fin
+     77
+     78	0055			     no_es:
+     79	0055  BE 0025r			 mov si, offset	msgNo
+     80	0058  E8 0000e			 call aputs
+     81
+     82	005B			     fin:
+     83	005B  B4 4C			 mov ah, 04Ch
+     84	005D  A0 0000r			 mov al, [codsal]
+     85	0060  CD 21			 int 21h
+     86				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 23:18:14	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "bisiesto"
+??TIME				  Text	 "23:18:14"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 BISIESTO
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+ANHO				  Word	 DGROUP:004E
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:003A
+CODSAL				  Byte	 DGROUP:0000
+FIN				  Near	 _TEXT:005B
+INICIO				  Near	 _TEXT:0000
+MSG1				  Byte	 DGROUP:0001
+MSGNO				  Byte	 DGROUP:0025
+MSGSI				  Byte	 DGROUP:0013
+NO_ES				  Near	 _TEXT:0055
+SI_ES				  Near	 _TEXT:004C
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0050 Word	  Public  DATA
+_TEXT				  16  0062 Word	  Public  CODE
+

@@ -1,0 +1,330 @@
+Turbo Assembler	 Version 4.1	    12/01/25 23:29:28	    Page 1
+func.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	sscan,aatoi,valC,atou,obtenBase,astrcat
+      7
+      8					 ;procedimiento: sscan
+      9
+     10	0000			     proc sscan
+     11					 ;guardamos si y di
+     12	0000  56			 push si
+     13	0001  57			 push di
+     14	0002  52			 push dx
+     15					 ;di sera nuestro scanner
+     16	0003  8B FE			 mov di, si
+     17
+     18					 ;vamos	a buscar el signo
+     19	0005			     @@buscarOp:
+     20	0005  8A 05			 mov al,[di] ;leemos el	char act
+     21
+     22					 ;comparamos con los op
+     23	0007  3C 2B			 cmp al, '+'
+     24	0009  74 0F			 je @@encontrado
+     25	000B  3C 2D			 cmp al, '-'
+     26	000D  74 0B			 je @@encontrado
+     27	000F  3C 2A			 cmp al, '*'
+     28	0011  74 07			 je @@encontrado
+     29	0013  3C 2F			 cmp al, '/'
+     30	0015  74 03			 je @@encontrado
+     31
+     32					 ;aumentamos di	para buscar en el siguiente lugar
+     33	0017  47			 inc di
+     34	0018  EB EB			 jmp @@buscarOp
+     35
+     36					 ;funcion donde	se corta la cadena
+     37	001A			     @@encontrado:
+     38	001A  33 C9			 xor cx,cx
+     39					 ;guardamos el signo en	cx
+     40	001C  8A C8			 mov cl,al
+     41					 ;lo guardamos por que s epodria ensuciar
+     42	001E  51			 push cx
+     43
+     44					 ;cambiamos el signo por 0 para	que piense que la cadena acaba ahi
+     45	001F  C6 05 00			 mov [byte ptr di], 0
+     46
+     47					 ;primer num
+     48	0022  E8 000F			 call aatoi
+     49	0025  50			 push ax
+     50
+     51					 ;segundo num
+     52	0026  8D 75 01			 lea si, [di+1]
+     53	0029  E8 0008			 call aatoi
+     54	002C  8B D8			 mov bx, ax
+     55
+     56					 ; sacamos de la pila
+     57	002E  58			 pop ax
+Turbo Assembler	 Version 4.1	    12/01/25 23:29:28	    Page 2
+func.ASM
+
+
+
+     58	002F  59			 pop cx
+     59
+     60	0030			     @@fin:
+     61					 ;sacamos di y si
+     62	0030  5A			 pop dx
+     63	0031  5F			 pop di
+     64	0032  5E			 pop si
+     65	0033  C3			 ret
+     66	0034				 endp sscan
+     67
+     68	0034			     proc    aatoi
+     69	0034  53			     push    bx		       ; Preserva BX, CX, DX, SI
+     70	0035  51			     push    cx
+     71	0036  52			     push    dx
+     72	0037  56			     push    si
+     73
+     74	0038  E8 0090			     call    astrupr	       ; strup(cadena)
+     75	003B  E8 007B			     call    astrlen	       ; CX = strlen(cadena)
+     76	003E  E8 0012			     call    obtenSigno	       ; DX = [SI] == '-,
+     77								       ; SI++, CX--
+     78	0041  E8 0024			     call    obtenBase	       ; BX = base, CX--
+     79	0044  E8 0046			     call    atou	       ; AX = atou(cadena)
+     80	0047  83 FA 00			     cmp     dx, 0	       ; if(dx == 0)
+     81	004A  74 02			     je	     @@sigi		;    goto @@sig
+     82	004C  F7 D8			     neg     ax		       ; ax = -ax
+     83
+     84	004E			     @@sigi:
+     85	004E  5E			     pop     si		       ; Restaura SI, DX, CX, BX
+     86	004F  5A			     pop     dx
+     87	0050  59			     pop     cx
+     88	0051  5B			     pop     bx
+     89	0052  C3			     ret
+     90	0053			     endp    aatoi
+     91
+     92	0053			     proc    obtenSigno
+     93	0053  33 D2			     xor     dx, dx	       ; dx = 0
+     94	0055  80 3C 2B			     cmp     [byte si],	'+'    ; if([si] == '+)
+     95	0058  74 0B			     je	     @@pos	       ;    goto @@pos
+     96	005A  80 3C 2D			     cmp     [byte si],	'-'    ; if([si] == '-)
+     97	005D  74 03			     je	     @@nega		;    goto @@neg
+     98	005F  EB 06 90			     jmp     @@fin	       ; goto @@fin
+     99
+    100	0062  BA 0001		     @@nega:  mov     dx, 1		; Dx = 1
+    101	0065  46		     @@pos:  inc     si		       ; SI++
+    102	0066  49			     dec     cx		       ; CX--
+    103	0067  C3		     @@fin:  ret
+    104	0068			     endp    obtenSigno
+    105
+    106	0068			     proc    obtenBase
+    107	0068  56			     push    si		       ; Preserva SI
+    108	0069  03 F1			     add     si, cx	       ; SI = cadena + strlen(
+    109	006B  4E			     dec     si		       ;      cadena) ?	1
+    110
+    111	006C  BB 000A			     mov     bx, 10	       ; base =	10
+    112
+    113
+    114	006F  80 3C 42			     cmp     [byte si],	'B'    ; if([si] == ')
+Turbo Assembler	 Version 4.1	    12/01/25 23:29:28	    Page 3
+func.ASM
+
+
+
+    115	0072  74 0D			     je	     @@bin	       ;    goto @@bin
+    116	0074  80 3C 48			     cmp     [byte si],	'H'    ; if([si] == ')
+    117	0077  74 0E			     je	     @@hex	       ;    goto @@hex
+    118	0079  80 3C 44			     cmp     [byte si],	'D'    ; if([si] == 'D)
+    119	007C  74 0C			     je	     @@decr		;    goto @@dec
+    120	007E  EB 0B 90			     jmp     @@fin	       ; goto @@fin
+    121
+    122	0081  BB 0002		     @@bin:  mov     bx, 2	       ; base =	2
+    123	0084  EB 04 90			     jmp     @@decr		; goto @@dec
+    124	0087  BB 0010		     @@hex:  mov     bx,16	       ; Base =	16
+    125	008A  49		     @@decr:  dec     cx		; CX--
+    126	008B			     @@fin:
+    127	008B  5E			     pop     si		       ; Restaura SI
+    128	008C  C3			     ret
+    129	008D			     endp    obtenBase
+    130
+    131	008D			     proc    atou
+    132	008D  52			     push   dx		       ; Preserva DX, DI
+    133	008E  57			     push   di
+    134	008F  33 C0			     xor     ax, ax
+    135	0091  E3 16			     jcxz    @@fin	       ; if(!CX) goto @@fin
+    136
+    137	0093  33 FF			     xor     di, di	       ; n = 0
+    138	0095			     @@do:			       ; do
+    139								       ; {
+    140	0095  8B C7			     mov     ax, di	       ;    AX = base*n
+    141	0097  F7 E3			     mul     bx
+    142	0099  8A 14			     mov     dl, [byte si]     ;    DX = [SI]
+    143	009B  32 F6			     xor     dh, dh
+    144	009D  E8 000C			     call    valC	       ;    DX = val([SI])
+    145	00A0  03 C2			     add     ax, dx	       ;    AX = base*n	+ DX
+    146	00A2  8B F8			     mov     di, ax	       ;    n =	AX
+    147	00A4  46			     inc     si		       ;    SI++
+    148	00A5  E2 EE			     loop    @@do	       ; }
+    149								       ; while(--CX > 0)
+    150
+    151	00A7  8B C7			     mov     ax, di
+    152	00A9  5F		     @@fin:  pop     di		       ; Restaura DI, DX
+    153	00AA  5A			     pop     dx
+    154	00AB  C3			     ret
+    155	00AC			     endp    atou
+    156
+    157	00AC			     proc    valC
+    158	00AC  83 FA 39			     cmp     dx, '9'
+    159	00AF  77 04			     ja	     @@hex
+    160	00B1  83 EA 30			     sub     dx, '0'
+    161	00B4  C3			     ret
+    162	00B5				     @@hex:
+    163	00B5  83 EA 37			     sub     dx, 'A' - 10
+    164	00B8  C3			     ret
+    165	00B9			     endp    valC
+    166
+    167	00B9			     proc    astrlen
+    168	00B9  50			     push   ax		       ; Preserva AX, DI
+    169	00BA  57			     push   di
+    170
+    171	00BB  8B FE			     mov     di, si	       ; DI = SI
+Turbo Assembler	 Version 4.1	    12/01/25 23:29:28	    Page 4
+func.ASM
+
+
+
+    172	00BD  32 C0			     xor     al, al	       ; AL = 0
+    173
+    174	00BF  FC			     cld		       ; Autoincrementa	DI
+    175	00C0  AE		     @@whi:  scasb		       ; while([DI++]);
+    176	00C1  75 FD			     jnz     @@whi
+    177
+    178	00C3  8B CF			     mov     cx, di	       ; CX = DI - SI ?	1
+    179	00C5  2B CE			     sub     cx, si
+    180	00C7  49			     dec     cx
+    181
+    182	00C8  5F			     pop    di		      ;	Restaura DI, AX
+    183	00C9  58			     pop     ax
+    184	00CA  C3			     ret
+    185	00CB			     endp    astrlen
+    186
+    187	00CB			     proc    astrupr
+    188	00CB  50			     push    ax		       ; Preserva AX, CX, SI, DI
+    189	00CC  51			     push    cx
+    190	00CD  56			     push    si
+    191	00CE  57			     push    di
+    192
+    193	00CF  E8 FFE7			     call    astrlen	       ; CX = strlen(cadena)
+    194
+    195	00D2  E3 11			     jcxz    @@fin	       ; if(!CX) goto @@fin
+    196
+    197	00D4  8B FE			     mov     di, si	       ; DI = SI
+    198
+    199	00D6  FC			     cld		       ; Autoincrementa	SI, DI
+    200	00D7			     @@do:			       ; do
+    201								       ; {
+    202	00D7  AC			     lodsb		       ;    AL = [SI++]
+    203	00D8  3C 61			     cmp     al, 'a'
+    204	00DA  72 06			     jb	     @@sigi
+    205	00DC  3C 7A			     cmp     al, 'z'
+    206	00DE  77 02			     ja	     @@sigi
+    207	00E0  2C 20			     sub     al, 'a'-'A'       ;    AL = toupper(AL)
+    208
+    209	00E2			     @@sigi:
+    210	00E2  AA			     stosb		       ;    [DI++] = AL
+    211	00E3  E2 F2			     loop    @@do	       ; }
+    212								       ; while(--CX > 0)
+    213	00E5  5F		     @@fin:  pop     di		       ; Restaura DI, SI, CX, AX
+    214	00E6  5E			     pop     si
+    215	00E7  59			     pop     cx
+    216	00E8  58			     pop     ax
+    217	00E9  C3			     ret
+    218	00EA			     endp    astrupr
+    219				     ; PROCEDIMIENTO: ASTRCAT (Concatenar Cadenas)
+    220	00EA			     proc astrcat
+    221	00EA  50			 push ax
+    222	00EB  56			 push si
+    223	00EC  57			 push di
+    224
+    225					 ; 1. Buscar el	final de la cadena Destino (DI)
+    226	00ED  32 C0			 xor al, al	 ; Buscamos el 0
+    227	00EF  FC			 cld
+    228	00F0			     @@buscar_fin:
+Turbo Assembler	 Version 4.1	    12/01/25 23:29:28	    Page 5
+func.ASM
+
+
+
+    229	00F0  AE			 scasb		 ; Compara AL con [DI],	avanza DI
+    230	00F1  75 FD			 jnz @@buscar_fin
+    231	00F3  4F			 dec di		 ; Retroceder 1	para sobreescribir el 0
+    232
+    233					 ; 2. Copiar Fuente (SI) al final de Destino (DI)
+    234	00F4			     @@copiar:
+    235	00F4  AC			 lodsb		 ; Cargar letra	de SI en AL
+    236	00F5  AA			 stosb		 ; Guardar letra en DI
+    237	00F6  3C 00			 cmp al, 0	 ; ?Fue	el terminador nulo?
+    238	00F8  75 FA			 jne @@copiar	 ; Si no, seguir copiando
+    239
+    240	00FA  5F			 pop di
+    241	00FB  5E			 pop si
+    242	00FC  58			 pop ax
+    243	00FD  C3			 ret
+    244	00FE			     endp astrcat
+    245				     end
+Turbo Assembler	 Version 4.1	    12/01/25 23:29:28	    Page 6
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "func	  "
+??TIME				  Text	 "23:29:28"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@BIN				  Near	 _TEXT:0081
+@@BUSCAROP			  Near	 _TEXT:0005
+@@BUSCAR_FIN			  Near	 _TEXT:00F0
+@@COPIAR			  Near	 _TEXT:00F4
+@@DECR				  Near	 _TEXT:008A
+@@DO				  Near	 _TEXT:0095
+@@DO				  Near	 _TEXT:00D7
+@@ENCONTRADO			  Near	 _TEXT:001A
+@@FIN				  Near	 _TEXT:0030
+@@FIN				  Near	 _TEXT:00A9
+@@FIN				  Near	 _TEXT:008B
+@@FIN				  Near	 _TEXT:00E5
+@@FIN				  Near	 _TEXT:0067
+@@HEX				  Near	 _TEXT:0087
+@@HEX				  Near	 _TEXT:00B5
+@@NEGA				  Near	 _TEXT:0062
+@@POS				  Near	 _TEXT:0065
+@@SIGI				  Near	 _TEXT:004E
+@@SIGI				  Near	 _TEXT:00E2
+@@WHI				  Near	 _TEXT:00C0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 FUNC
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:0034
+ASTRCAT				  Near	 _TEXT:00EA
+ASTRLEN				  Near	 _TEXT:00B9
+ASTRUPR				  Near	 _TEXT:00CB
+ATOU				  Near	 _TEXT:008D
+OBTENBASE			  Near	 _TEXT:0068
+OBTENSIGNO			  Near	 _TEXT:0053
+SSCAN				  Near	 _TEXT:0000
+VALC				  Near	 _TEXT:00AC
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  00FE Word	  Public  CODE
+

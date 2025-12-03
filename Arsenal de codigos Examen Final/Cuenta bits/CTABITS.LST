@@ -1,0 +1,124 @@
+Turbo Assembler	 Version 4.1	    12/01/25 22:36:57	    Page 1
+ctabits.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  44 61 6D 65 20 75	6E+	 msg1	db 'Dame un numero (0-65535): ', 0
+      9	      20 6E 75 6D 65 72	6F+
+     10	      20 28 30 2D 36 35	35+
+     11	      33 35 29 3A 20 00
+     12	001C  0D 0A 42 69 74 73	20+	 msg2	db 13, 10, 'Bits encendidos (unos): ', 0
+     13	      65 6E 63 65 6E 64	69+
+     14	      64 6F 73 20 28 75	6E+
+     15	      6F 73 29 3A 20 00
+     16	0037  14*(??)			 buffer	db 20 dup(?)
+     17
+     18	004B  ????			 num	dw ?
+     19	004D  0000			 conteo	dw 0
+     20
+     21	004F			     codeseg
+     22					 extrn aputs:proc, agets:proc, aatoi:proc, itoa:proc
+     23
+     24	0000			     inicio:
+     25	0000  B8 0000s			 mov ax, @data
+     26	0003  8E D8			 mov ds, ax
+     27	0005  8E C0			 mov es, ax
+     28
+     29					 ; pedir numero
+     30	0007  BE 0001r			 mov si, offset	msg1
+     31	000A  E8 0000e			 call aputs
+     32	000D  BF 0037r			 mov di, offset	buffer
+     33	0010  B9 0013			 mov cx, 19
+     34	0013  E8 0000e			 call agets
+     35
+     36	0016  BE 0037r			 mov si, offset	buffer
+     37	0019  E8 0000e			 call aatoi
+     38	001C  A3 004Br			 mov [num], ax	 ; guardamos el	numero
+     39
+     40					 ; logica de contar bits
+     41	001F  B9 0010			 mov cx, 16	 ; son 16 bits en una palabra (word)
+     42	0022  33 DB			 xor bx, bx	 ; bx sera el contador de unos
+     43	0024  A1 004Br			 mov ax, [num]	 ; cargamos el numero
+     44
+     45	0027			     ciclo_bits:
+     46	0027  D1 E0			 shl ax, 1	 ; empuja el bit mas alto al carry flag	(cf)
+     47	0029  83 D3 00			 adc bx, 0	 ; suma	el carry al contador (bx = bx +	cf)
+     48	002C  E2 F9			 loop ciclo_bits ; repite 16 veces
+     49
+     50					 ; guardar resultado
+     51	002E  89 1E 004Dr		 mov [conteo], bx
+     52
+     53					 ; mostrar resultado
+     54	0032  BE 001Cr			 mov si, offset	msg2
+     55	0035  E8 0000e			 call aputs
+     56
+     57	0038  A1 004Dr			 mov ax, [conteo]
+Turbo Assembler	 Version 4.1	    12/01/25 22:36:57	    Page 2
+ctabits.ASM
+
+
+
+     58	003B  33 D2			 xor dx, dx
+     59	003D  BF 0037r			 mov di, offset	buffer
+     60	0040  E8 0000e			 call itoa
+     61	0043  BE 0037r			 mov si, offset	buffer
+     62	0046  E8 0000e			 call aputs
+     63
+     64	0049  B4 00			 mov ah, 00h
+     65	004B  CD 16			 int 16h
+     66
+     67	004D  B4 4C			 mov ah, 04Ch
+     68	004F  A0 0000r			 mov al, [codsal]
+     69	0052  CD 21			 int 21h
+     70				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 22:36:57	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "ctabits "
+??TIME				  Text	 "22:36:57"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 CTABITS
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:0037
+CICLO_BITS			  Near	 _TEXT:0027
+CODSAL				  Byte	 DGROUP:0000
+CONTEO				  Word	 DGROUP:004D
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+MSG1				  Byte	 DGROUP:0001
+MSG2				  Byte	 DGROUP:001C
+NUM				  Word	 DGROUP:004B
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  004F Word	  Public  DATA
+_TEXT				  16  0054 Word	  Public  CODE
+

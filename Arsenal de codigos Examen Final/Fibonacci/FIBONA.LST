@@ -1,0 +1,160 @@
+Turbo Assembler	 Version 4.1	    12/01/25 23:07:20	    Page 1
+fibona.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  51 75 65 20 6E 75	6D+	 msg1	db 'Que	numero de la sucesion fibonacci	necesitas?: ', 0
+      9	      65 72 6F 20 64 65	20+
+     10	      6C 61 20 73 75 63	65+
+     11	      73 69 6F 6E 20 66	69+
+     12	      62 6F 6E 61 63 63	69+
+     13	      20 6E 65 63 65 73	69+
+     14	      74 61 73 3F 3A 20	00
+     15	0032  0D 0A 45 6C 20 72	65+	 msgRes	db 13, 10, 'El resultado es: ',	0
+     16	      73 75 6C 74 61 64	6F+
+     17	      20 65 73 3A 20 00
+     18
+     19	0046  14*(??)			 buffer	db 20 dup(?)
+     20	005A  0A*(??)			 temp	db 10 dup(?)
+     21
+     22	0064  ????			 n	dw ?	  ; el numero n	que pide el usuario
+     23	0066  ????			 fibo	dw ?	  ; donde guardamos el resultado
+     24
+     25	0068			     codeseg
+     26					 extrn aputs:proc, agets:proc, aatoi:proc, itoa:proc
+     27
+     28	0000			     inicio:
+     29	0000  B8 0000s			 mov ax, @data
+     30	0003  8E D8			 mov ds, ax
+     31	0005  8E C0			 mov es, ax
+     32
+     33					 ; pedir n
+     34	0007  BE 0001r			 mov si, offset	msg1
+     35	000A  E8 0000e			 call aputs
+     36
+     37	000D  BF 0046r			 mov di, offset	buffer
+     38	0010  B9 0013			 mov cx, 19
+     39	0013  E8 0000e			 call agets
+     40
+     41	0016  BE 0046r			 mov si, offset	buffer
+     42	0019  E8 0000e			 call aatoi	     ; convierte texto a numero
+     43	001C  A3 0064r			 mov [n], ax	     ; guardamos n
+     44
+     45					 ; cargar n en cx para comparar
+     46	001F  8B 0E 0064r		 mov cx, [n]
+     47
+     48					 ; casos base 0	y 1
+     49	0023  83 F9 00			 cmp cx, 0
+     50	0026  74 1D			 je cero
+     51	0028  83 F9 01			 cmp cx, 1
+     52	002B  74 21			 je uno
+     53
+     54					 ; preparacion del ciclo (para n >= 2)
+     55					 ; tu logica original:
+     56	002D  BB 0002			 mov bx, 2	     ; contador	empieza	en 2
+     57	0030  B8 0000			 mov ax, 0	     ; f(n-2)
+Turbo Assembler	 Version 4.1	    12/01/25 23:07:20	    Page 2
+fibona.ASM
+
+
+
+     58	0033  BA 0001			 mov dx, 1	     ; f(n-1)
+     59
+     60	0036			     mientras:
+     61	0036  03 C2			 add ax, dx	     ; suma: nuevo = anterior +	actual
+     62	0038  92			 xchg ax, dx	     ; el truco: dx se vuelve el nuevo,	ax se guarda el	viejo
+     63
+     64	0039  43			 inc bx		     ; contador++
+     65
+     66	003A  3B D9			 cmp bx, cx	     ; comparamos contador con n
+     67	003C  76 F8			 jbe mientras	     ; si contador <= n, repetir
+     68
+     69					 ; al salir del	ciclo, el resultado quedo en dx
+     70	003E  89 16 0066r		 mov [fibo], dx
+     71	0042  EB 13 90			 jmp mostrar
+     72
+     73	0045			     cero:
+     74	0045  C7 06 0066r 0000		 mov [fibo], 0
+     75	004B  EB 0A 90			 jmp mostrar
+     76
+     77	004E			     uno:
+     78	004E  C7 06 0066r 0001		 mov [fibo], 1
+     79	0054  EB 01 90			 jmp mostrar
+     80
+     81	0057			     mostrar:
+     82					 ; imprimir mensaje
+     83	0057  BE 0032r			 mov si, offset	msgRes
+     84	005A  E8 0000e			 call aputs
+     85
+     86					 ; convertir resultado a texto
+     87	005D  A1 0066r			 mov ax, [fibo]
+     88	0060  33 D2			 xor dx, dx	     ; limpiar dx para itoa
+     89	0062  BF 005Ar			 mov di, offset	temp
+     90	0065  E8 0000e			 call itoa
+     91
+     92					 ; imprimir numero
+     93	0068  BE 005Ar			 mov si, offset	temp
+     94	006B  E8 0000e			 call aputs
+     95
+     96	006E			     salir:
+     97	006E  B4 4C			 mov ah, 04Ch
+     98	0070  A0 0000r			 mov al, [codsal]
+     99	0073  CD 21			 int 21h
+    100
+    101				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 23:07:20	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "fibona  "
+??TIME				  Text	 "23:07:20"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 FIBONA
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:0046
+CERO				  Near	 _TEXT:0045
+CODSAL				  Byte	 DGROUP:0000
+FIBO				  Word	 DGROUP:0066
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+MIENTRAS			  Near	 _TEXT:0036
+MOSTRAR				  Near	 _TEXT:0057
+MSG1				  Byte	 DGROUP:0001
+MSGRES				  Byte	 DGROUP:0032
+N				  Word	 DGROUP:0064
+SALIR				  Near	 _TEXT:006E
+TEMP				  Byte	 DGROUP:005A
+UNO				  Near	 _TEXT:004E
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0068 Word	  Public  DATA
+_TEXT				  16  0075 Word	  Public  CODE
+

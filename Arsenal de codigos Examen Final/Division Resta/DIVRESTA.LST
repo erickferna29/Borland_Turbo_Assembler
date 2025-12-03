@@ -1,0 +1,210 @@
+Turbo Assembler	 Version 4.1	    12/01/25 22:11:43	    Page 1
+DivResta.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  45 73 63 72 69 62	65+	 msg1	db 'Escribe la division: ', 0
+      9	      20 6C 61 20 64 69	76+
+     10	      69 73 69 6F 6E 3A	20+
+     11	      00
+     12	0017  0D 0A 43 6F 63 69	65+	 msgC	db 13, 10, 'Cociente: ', 0
+     13	      6E 74 65 3A 20 00
+     14	0024  0D 0A 52 65 73 69	64+	 msgR	db 13, 10, 'Residuo: ',	0
+     15	      75 6F 3A 20 00
+     16
+     17	0030  1E*(??)			 buffer	db 30 dup(?)
+     18	004E  0A*(??)			 temp	db 10 dup(?)
+     19
+     20	0058  ????????			 dvidendo dd ?
+     21	005C  ????			 divisor  dw ?
+     22	005E  ????			 residuo  dw ?
+     23	0060  ????			 cociente dw ?
+     24
+     25	0062			     codeseg
+     26					 extrn aputs:proc, agets:proc
+     27					 extrn aatoi:proc, itoa:proc
+     28
+     29	0000			     inicio:
+     30	0000  B8 0000s			 mov ax, @data
+     31	0003  8E D8			 mov ds, ax
+     32	0005  8E C0			 mov es, ax
+     33
+     34					 ; pedir la cadena completa
+     35	0007  BE 0001r			 mov si, offset	msg1
+     36	000A  E8 0000e			 call aputs
+     37
+     38	000D  BF 0030r			 mov di, offset	buffer
+     39	0010  B9 001D			 mov cx, 29
+     40	0013  E8 0000e			 call agets
+     41
+     42					 ; buscar la diagonal para separar
+     43	0016  BF 0030r			 mov di, offset	buffer
+     44
+     45	0019			     buscar_slash:
+     46	0019  8A 05			 mov al, [di]
+     47	001B  3C 00			 cmp al, 0
+     48	001D  74 69			 je salir
+     49
+     50	001F  3C 2F			 cmp al, '/'
+     51	0021  74 03			 je encontrado
+     52
+     53	0023  47			 inc di
+     54	0024  EB F3			 jmp buscar_slash
+     55
+     56	0026			     encontrado:
+     57					 ; romper la cadena aqui
+Turbo Assembler	 Version 4.1	    12/01/25 22:11:43	    Page 2
+DivResta.ASM
+
+
+
+     58	0026  C6 05 00			 mov [byte ptr di], 0
+     59
+     60					 ; primer numero (dividendo)
+     61	0029  BE 0030r			 mov si, offset	buffer
+     62	002C  E8 0000e			 call aatoi
+     63
+     64					 ; guardar en 32 bits
+     65	002F  A3 0058r			 mov [word ptr dvidendo], ax
+     66	0032  C7 06 005Ar 0000		 mov [word ptr dvidendo+2], 0
+     67
+     68					 ; segundo numero (divisor)
+     69	0038  8D 75 01			 lea si, [di+1]
+     70	003B  E8 0000e			 call aatoi
+     71	003E  A3 005Cr			 mov [divisor],	ax
+     72
+     73					 ; preparar registros
+     74	0041  A1 0058r			 mov ax, [word ptr dvidendo]
+     75	0044  8B 16 005Ar		 mov dx, [word ptr dvidendo+2]
+     76	0048  8B 1E 005Cr		 mov bx, [divisor]
+     77
+     78					 ; llamar a la logica interna
+     79	004C  E8 0040			 call div_restas
+     80
+     81					 ; guardar resultados
+     82	004F  A3 005Er			 mov [residuo],	ax
+     83	0052  89 0E 0060r		 mov [cociente], cx
+     84
+     85					 ; mostrar cociente
+     86	0056  BE 0017r			 mov si, offset	msgC
+     87	0059  E8 0000e			 call aputs
+     88	005C  A1 0060r			 mov ax, [cociente]
+     89	005F  33 D2			 xor dx, dx
+     90	0061  BF 004Er			 mov di, offset	temp
+     91	0064  E8 0000e			 call itoa
+     92	0067  BE 004Er			 mov si, offset	temp
+     93	006A  E8 0000e			 call aputs
+     94
+     95					 ; mostrar residuo
+     96	006D  BE 0024r			 mov si, offset	msgR
+     97	0070  E8 0000e			 call aputs
+     98	0073  A1 005Er			 mov ax, [residuo]
+     99	0076  33 D2			 xor dx, dx
+    100	0078  BF 004Er			 mov di, offset	temp
+    101	007B  E8 0000e			 call itoa
+    102	007E  BE 004Er			 mov si, offset	temp
+    103	0081  E8 0000e			 call aputs
+    104
+    105					 ; pausa
+    106	0084  B4 00			 mov ah, 00h
+    107	0086  CD 16			 int 16h
+    108
+    109	0088			     salir:
+    110	0088  B4 4C			 mov ah, 04Ch
+    111	008A  A0 0000r			 mov al, [codsal]
+    112	008D  CD 21			 int 21h
+    113
+    114				     ; procedimiento local de division por restas
+Turbo Assembler	 Version 4.1	    12/01/25 22:11:43	    Page 3
+DivResta.ASM
+
+
+
+    115	008F			     proc div_restas
+    116	008F  33 C9			 xor cx, cx		; limpiamos el contador	(cociente)
+    117
+    118					 ; validacion division por cero
+    119	0091  83 FB 00			 cmp bx, 0
+    120	0094  74 11			 je fin_div_proc
+    121
+    122	0096			     ciclo_resta:
+    123					 ; checar si dividendo >= divisor
+    124	0096  83 FA 00			 cmp dx, 0
+    125	0099  77 04			 ja es_mayor		; si tiene parte alta, es mayor
+    126
+    127	009B  3B C3			 cmp ax, bx
+    128	009D  72 08			 jb fin_div_proc	; si es	menor, terminamos
+    129
+    130	009F			     es_mayor:
+    131	009F  2B C3			 sub ax, bx		; restar parte baja
+    132	00A1  83 DA 00			 sbb dx, 0		; restar acarreo a parte alta
+    133
+    134	00A4  41			 inc cx			; sumamos 1 al cociente
+    135	00A5  EB EF			 jmp ciclo_resta
+    136
+    137	00A7			     fin_div_proc:
+    138	00A7  C3			 ret
+    139	00A8			     endp div_restas
+    140
+    141				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 22:11:43	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "DivResta"
+??TIME				  Text	 "22:11:43"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 DIVRESTA
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:0030
+BUSCAR_SLASH			  Near	 _TEXT:0019
+CICLO_RESTA			  Near	 _TEXT:0096
+COCIENTE			  Word	 DGROUP:0060
+CODSAL				  Byte	 DGROUP:0000
+DIVISOR				  Word	 DGROUP:005C
+DIV_RESTAS			  Near	 _TEXT:008F
+DVIDENDO			  Dword	 DGROUP:0058
+ENCONTRADO			  Near	 _TEXT:0026
+ES_MAYOR			  Near	 _TEXT:009F
+FIN_DIV_PROC			  Near	 _TEXT:00A7
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+MSG1				  Byte	 DGROUP:0001
+MSGC				  Byte	 DGROUP:0017
+MSGR				  Byte	 DGROUP:0024
+RESIDUO				  Word	 DGROUP:005E
+SALIR				  Near	 _TEXT:0088
+TEMP				  Byte	 DGROUP:004E
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0062 Word	  Public  DATA
+_TEXT				  16  00A8 Word	  Public  CODE
+

@@ -1,0 +1,293 @@
+Turbo Assembler	 Version 4.1	    12/01/25 23:05:19	    Page 1
+itoa.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	itoa,ultoa,itoa_hex,itoa_bin
+      7
+      8					 ; itoa	integer	to ascii
+      9				     ; Convierte un numero de palabra doble a decimal
+     10	0000			     proc itoa
+     11	0000  50			 push ax
+     12	0001  53			 push bx
+     13	0002  51			 push cx
+     14	0003  52			 push dx
+     15	0004  57			 push di
+     16	0005  56			 push si
+     17
+     18					 ; checar signo	solo si	es negativo dx
+     19	0006  F7 C2 8000		 test dx, 8000h
+     20	000A  74 0E			 jz @@positivo
+     21
+     22					 ; si es negativo poner	-
+     23	000C  C6 05 2D			 mov [byte ptr di], '-'
+     24	000F  47			 inc di
+     25
+     26					 ; negar dx:ax
+     27	0010  F7 D2			 not dx
+     28	0012  F7 D0			 not ax
+     29	0014  05 0001			 add ax, 1
+     30	0017  83 D2 00			 adc dx, 0
+     31
+     32	001A			     @@positivo:
+     33	001A  E8 0007			 call ultoa	 ; Convertir sin signo aun
+     34
+     35	001D  5E			 pop si
+     36	001E  5F			 pop di
+     37	001F  5A			 pop dx
+     38	0020  59			 pop cx
+     39	0021  5B			 pop bx
+     40	0022  58			 pop ax
+     41	0023  C3			 ret
+     42	0024			     endp itoa
+     43
+     44				     ;func que convierte a ascii sin signo
+     45	0024			     proc ultoa
+     46	0024  50			 push ax
+     47	0025  53			 push bx
+     48	0026  51			 push cx
+     49	0027  52			 push dx
+     50	0028  57			 push di
+     51	0029  56			 push si
+     52
+     53	002A  BB 000A			 mov bx, 10
+     54	002D  33 C9			 xor cx, cx
+     55
+     56					 ;Si el	numero es 0
+     57	002F  8B F2			 mov si, dx
+Turbo Assembler	 Version 4.1	    12/01/25 23:05:19	    Page 2
+itoa.ASM
+
+
+
+     58	0031  0B F0			 or si,	ax
+     59	0033  75 07			 jnz @@ciclo_div
+     60	0035  C6 05 30			 mov [byte ptr di], '0'
+     61	0038  47			 inc di
+     62	0039  EB 20 90			 jmp @@terminar
+     63
+     64	003C			     @@ciclo_div:
+     65					 ;dividir parte	alta, luego parte baja con residuo
+     66	003C  50			 push ax	 ;guardar parte	baja
+     67	003D  8B C2			 mov ax, dx	 ;mover	parte alta a AX	para dividir
+     68	003F  33 D2			 xor dx, dx	 ; Limpiar DX
+     69	0041  F7 F3			 div bx		 ;ax = alta/10,	DX = Residuo Alta
+     70
+     71	0043  8B F0			 mov si, ax	 ;guardar cociente alto	temporalmente
+     72	0045  58			 pop ax		 ;recuperar parte baaj original
+     73	0046  F7 F3			 div bx		 ; (ResiduoAlta:Baja) /	10
+     74
+     75					 ; Ahora: DX = Residuo final (Digito), AX = Cociente Bajo, SI =	Cociente Alto
+     76	0048  52			 push dx	 ;guardra digito en pial (salen	al reves)
+     77	0049  41			 inc cx		 ;contar digito
+     78
+     79					 ;construir el numero para la siguiente	vuelta (DX:AX =	Cociente)
+     80	004A  8B D6			 mov dx, si	 ; Parte alta nueva
+     81					 ;ax ya	tiene la parte baja nueva
+     82
+     83					 ; Checar si ya	es cero
+     84	004C  8B F2			 mov si, dx
+     85	004E  0B F0			 or si,	ax
+     86	0050  75 EA			 jnz @@ciclo_div ; Si no es cero, repetir
+     87
+     88					 ; Sacar digitos de la pila y guardarlos
+     89	0052			     @@sacar_pila:
+     90	0052  5A			 pop dx		 ;recuperar digito 0 a 9
+     91	0053  80 C2 30			 add dl, '0'	 ;convertir a ascii
+     92	0056  88 15			 mov [di], dl	 ;guardar en buffer
+     93	0058  47			 inc di
+     94	0059  E2 F7			 loop @@sacar_pila
+     95
+     96	005B			     @@terminar:
+     97	005B  C6 05 00			 mov [byte ptr di], 0
+     98
+     99	005E  5E			 pop si
+    100	005F  5F			 pop di
+    101	0060  5A			 pop dx
+    102	0061  59			 pop cx
+    103	0062  5B			 pop bx
+    104	0063  58			 pop ax
+    105	0064  C3			 ret
+    106	0065			     endp ultoa
+    107				     ;func decimal a hexa
+    108	0065			     proc itoa_hex
+    109	0065  50			 push ax
+    110	0066  53			 push bx
+    111	0067  51			 push cx
+    112	0068  52			 push dx
+    113	0069  57			 push di
+    114	006A  56			 push si
+Turbo Assembler	 Version 4.1	    12/01/25 23:05:19	    Page 3
+itoa.ASM
+
+
+
+    115
+    116	006B  BB 0010			 mov bx, 16
+    117	006E  33 C9			 xor cx, cx
+    118
+    119					 ;caso especial	si 0
+    120	0070  8B F2			 mov si, dx
+    121	0072  0B F0			 or si,	ax
+    122	0074  75 07			 jnz @@ciclo_hex
+    123	0076  C6 05 30			 mov [byte ptr di], '0'
+    124	0079  47			 inc di
+    125	007A  EB 2B 90			 jmp @@fin_hex
+    126
+    127	007D			     @@ciclo_hex:
+    128					 ; Division de palabra doble (DX:AX / palabra)
+    129	007D  50			 push ax
+    130	007E  8B C2			 mov ax, dx
+    131	0080  33 D2			 xor dx, dx
+    132	0082  F7 F3			 div bx		 ; Dividir Alta
+    133	0084  8B F0			 mov si, ax
+    134	0086  58			 pop ax
+    135	0087  F7 F3			 div bx		 ; Dividir Baja
+    136
+    137	0089  52			 push dx
+    138	008A  41			 inc cx
+    139
+    140	008B  8B D6			 mov dx, si
+    141	008D  8B F2			 mov si, dx
+    142	008F  0B F0			 or si,	ax
+    143	0091  75 EA			 jnz @@ciclo_hex
+    144
+    145	0093			     @@sacar_hex:
+    146	0093  5A			 pop dx
+    147	0094  80 FA 09			 cmp dl, 9
+    148	0097  77 06			 ja @@es_letra
+    149	0099  80 C2 30			 add dl, '0'
+    150	009C  EB 04 90			 jmp @@guardar
+    151	009F			     @@es_letra:
+    152	009F  80 C2 37			 add dl, 55
+    153
+    154	00A2			     @@guardar:
+    155	00A2  88 15			 mov [di], dl
+    156	00A4  47			 inc di
+    157	00A5  E2 EC			 loop @@sacar_hex
+    158
+    159	00A7			     @@fin_hex:
+    160	00A7  C6 05 00			 mov [byte ptr di], 0
+    161
+    162	00AA  5E			 pop si
+    163	00AB  5F			 pop di
+    164	00AC  5A			 pop dx
+    165	00AD  59			 pop cx
+    166	00AE  5B			 pop bx
+    167	00AF  58			 pop ax
+    168	00B0  C3			 ret
+    169	00B1			     endp itoa_hex
+    170
+    171				     ; func dec	a bin
+Turbo Assembler	 Version 4.1	    12/01/25 23:05:19	    Page 4
+itoa.ASM
+
+
+
+    172	00B1			     proc itoa_bin
+    173	00B1  50			 push ax
+    174	00B2  53			 push bx
+    175	00B3  51			 push cx
+    176	00B4  52			 push dx
+    177	00B5  57			 push di
+    178	00B6  56			 push si
+    179
+    180	00B7  BB 0002			 mov bx, 2
+    181	00BA  33 C9			 xor cx, cx
+    182
+    183					 ; Caso	0
+    184	00BC  8B F2			 mov si, dx
+    185	00BE  0B F0			 or si,	ax
+    186	00C0  75 07			 jnz @@ciclo_bin
+    187	00C2  C6 05 30			 mov [byte ptr di], '0'
+    188	00C5  47			 inc di
+    189	00C6  EB 20 90			 jmp @@fin_bin
+    190
+    191	00C9			     @@ciclo_bin:
+    192	00C9  50			 push ax
+    193	00CA  8B C2			 mov ax, dx
+    194	00CC  33 D2			 xor dx, dx
+    195	00CE  F7 F3			 div bx
+    196	00D0  8B F0			 mov si, ax
+    197	00D2  58			 pop ax
+    198	00D3  F7 F3			 div bx
+    199
+    200	00D5  52			 push dx
+    201	00D6  41			 inc cx
+    202
+    203	00D7  8B D6			 mov dx, si
+    204	00D9  8B F2			 mov si, dx
+    205	00DB  0B F0			 or si,	ax
+    206	00DD  75 EA			 jnz @@ciclo_bin
+    207
+    208	00DF			     @@sacar_bin:
+    209	00DF  5A			 pop dx
+    210	00E0  80 C2 30			 add dl, '0'
+    211	00E3  88 15			 mov [di], dl
+    212	00E5  47			 inc di
+    213	00E6  E2 F7			 loop @@sacar_bin
+    214
+    215	00E8			     @@fin_bin:
+    216	00E8  C6 05 00			 mov [byte ptr di], 0
+    217
+    218	00EB  5E			 pop si
+    219	00EC  5F			 pop di
+    220	00ED  5A			 pop dx
+    221	00EE  59			 pop cx
+    222	00EF  5B			 pop bx
+    223	00F0  58			 pop ax
+    224	00F1  C3			 ret
+    225	00F2			     endp itoa_bin
+    226				     end
+Turbo Assembler	 Version 4.1	    12/01/25 23:05:19	    Page 5
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "itoa	  "
+??TIME				  Text	 "23:05:19"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CICLO_BIN			  Near	 _TEXT:00C9
+@@CICLO_DIV			  Near	 _TEXT:003C
+@@CICLO_HEX			  Near	 _TEXT:007D
+@@ES_LETRA			  Near	 _TEXT:009F
+@@FIN_BIN			  Near	 _TEXT:00E8
+@@FIN_HEX			  Near	 _TEXT:00A7
+@@GUARDAR			  Near	 _TEXT:00A2
+@@POSITIVO			  Near	 _TEXT:001A
+@@SACAR_BIN			  Near	 _TEXT:00DF
+@@SACAR_HEX			  Near	 _TEXT:0093
+@@SACAR_PILA			  Near	 _TEXT:0052
+@@TERMINAR			  Near	 _TEXT:005B
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 ITOA
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+ITOA				  Near	 _TEXT:0000
+ITOA_BIN			  Near	 _TEXT:00B1
+ITOA_HEX			  Near	 _TEXT:0065
+ULTOA				  Near	 _TEXT:0024
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  00F2 Word	  Public  CODE
+

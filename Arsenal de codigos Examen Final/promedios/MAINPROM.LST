@@ -1,0 +1,164 @@
+Turbo Assembler	 Version 4.1	    12/01/25 15:31:13	    Page 1
+mainProm.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8					 ; mensajes
+      9	0001  43 75 61 6E 74 6F	73+	 msg1 db 'Cuantos alumnos son?:	', 0
+     10	      20 61 6C 75 6D 6E	6F+
+     11	      73 20 73 6F 6E 3F	3A+
+     12	      20 00
+     13	0018  0D 0A 45 73 63 72	69+	 msg2 db 13, 10, 'Escribe la calificacion: ', 0
+     14	      62 65 20 6C 61 20	63+
+     15	      61 6C 69 66 69 63	61+
+     16	      63 69 6F 6E 3A 20	00
+     17	0034  0D 0A 45 6C 20 70	72+	 msg3 db 13, 10, 'El promedio final es:	', 0
+     18	      6F 6D 65 64 69 6F	20+
+     19	      66 69 6E 61 6C 20	65+
+     20	      73 3A 20 00
+     21
+     22					 ; buffers y variables
+     23	004D  14*(??)			 buffer	db 20 dup(?)   ; aqui leemos lo	que escribes
+     24
+     25	0061  ????			 total	dw ?	       ; aqui guardamos	cuantos	son (el	divisor)
+     26	0063  0000			 suma	dw 0	       ; esta es la bolsa (acumulador)
+     27
+     28	0065			     codeseg
+     29					 ; importamos tus herramientas
+     30					 extrn aputs:proc, agets:proc
+     31					 extrn aatoi:proc, itoa:proc  ;	necesitamos aatoi para leer numeros
+     32
+     33	0000			     inicio:
+     34	0000  B8 0000s			 mov ax, @data
+     35	0003  8E D8			 mov ds, ax
+     36	0005  8E C0			 mov es, ax
+     37
+     38					 ; paso	1: preguntar cuantos son
+     39	0007  BE 0001r			 mov si, offset	msg1
+     40	000A  E8 0000e			 call aputs
+     41
+     42	000D  BF 004Dr			 mov di, offset	buffer
+     43	0010  B9 0013			 mov cx, 19
+     44	0013  E8 0000e			 call agets	     ; leemos texto
+     45
+     46	0016  BE 004Dr			 mov si, offset	buffer
+     47	0019  E8 0000e			 call aatoi	     ; convertimos texto a numero
+     48	001C  A3 0061r			 mov [total], ax     ; guardamos el total para dividir al final
+     49
+     50					 ; preparamos el contador de vueltas
+     51	001F  8B C8			 mov cx, ax	     ; cx es el	contador del ciclo
+     52
+     53					 ; si dijo 0 alumnos, nos vamos	para no	dividir	entre cero
+     54	0021  3D 0000			 cmp ax, 0
+     55	0024  74 3C			 je fin
+     56
+     57					 ; paso	2: el bucle (pedir y sumar)
+Turbo Assembler	 Version 4.1	    12/01/25 15:31:13	    Page 2
+mainProm.ASM
+
+
+
+     58	0026			     ciclo_pedir:
+     59	0026  51			 push cx	     ; guardamos cx en la pila porque se ensucia
+     60
+     61					 ; pedir calificacion
+     62	0027  BE 0018r			 mov si, offset	msg2
+     63	002A  E8 0000e			 call aputs
+     64
+     65	002D  BF 004Dr			 mov di, offset	buffer
+     66	0030  B9 0013			 mov cx, 19
+     67	0033  E8 0000e			 call agets	     ; leemos calificacion
+     68
+     69					 ; convertir a numero
+     70	0036  BE 004Dr			 mov si, offset	buffer
+     71	0039  E8 0000e			 call aatoi	     ; ax tiene	el numero
+     72
+     73					 ; echar a la bolsa
+     74	003C  01 06 0063r		 add [suma], ax	     ; suma = suma anterior + nueva calif
+     75
+     76	0040  59			 pop cx		     ; recuperamos el contador
+     77	0041  E2 E3			 loop ciclo_pedir    ; resta 1 a cx. si	no es 0, repite.
+     78
+     79					 ; paso	3: la division final
+     80					 ; promedio = suma / total
+     81
+     82	0043  A1 0063r			 mov ax, [suma]	     ; cargamos	el peso	total de la bolsa
+     83	0046  33 D2			 xor dx, dx	     ; limpiamos parte alta
+     84
+     85	0048  F7 36 0061r		 div [total]	     ; dividimos ax / total. resultado en ax.
+     86
+     87					 ; guardamos el	promedio en dx:ax para itoa
+     88	004C  33 D2			 xor dx, dx
+     89
+     90					 ; mostrar resultado
+     91	004E  50			 push ax	     ; guardamos el resultado un momento
+     92
+     93	004F  BE 0034r			 mov si, offset	msg3
+     94	0052  E8 0000e			 call aputs
+     95
+     96	0055  58			 pop ax		     ; recuperamos resultado
+     97	0056  BF 004Dr			 mov di, offset	buffer
+     98	0059  E8 0000e			 call itoa	     ; convertimos numero a texto
+     99
+    100	005C  BE 004Dr			 mov si, offset	buffer
+    101	005F  E8 0000e			 call aputs	     ; imprimimos el promedio
+    102
+    103	0062			     fin:
+    104	0062  B4 4C			 mov ah, 04Ch
+    105	0064  A0 0000r			 mov al, [codsal]
+    106	0067  CD 21			 int 21h
+    107
+    108				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 15:31:13	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "mainProm"
+??TIME				  Text	 "15:31:13"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MAINPROM
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:004D
+CICLO_PEDIR			  Near	 _TEXT:0026
+CODSAL				  Byte	 DGROUP:0000
+FIN				  Near	 _TEXT:0062
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+MSG1				  Byte	 DGROUP:0001
+MSG2				  Byte	 DGROUP:0018
+MSG3				  Byte	 DGROUP:0034
+SUMA				  Word	 DGROUP:0063
+TOTAL				  Word	 DGROUP:0061
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0065 Word	  Public  DATA
+_TEXT				  16  0069 Word	  Public  CODE
+

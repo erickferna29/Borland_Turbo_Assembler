@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    11/23/25 15:41:10	    Page 1
+Turbo Assembler	 Version 4.1	    12/02/25 22:33:14	    Page 1
 main.ASM
 
 
@@ -10,102 +10,71 @@ main.ASM
       5
       6	0100			     dataseg
       7	0000  00			 codsal	db 0
-      8	0001  45 73 63 72 69 62	61+	 msg1 db 'Escriba el numero 1: ', 0
-      9	      20 65 6C 20 6E 75	6D+
-     10	      65 72 6F 20 31 3A	20+
+      8	0001  45 73 63 72 69 62	61+	 msg1 db 'Escriba la fraccion: ', 0
+      9	      20 6C 61 20 66 72	61+
+     10	      63 63 69 6F 6E 3A	20+
      11	      00
-     12	0017  45 73 63 72 69 62	61+	 msg2 db 'Escriba el numero 2: ',0
-     13	      20 65 6C 20 6E 75	6D+
-     14	      65 72 6F 20 32 3A	20+
-     15	      00
-     16	002D  45 6C 20 4D 43 44	20+	 msg3 db 'El MCD es: ',0
-     17	      65 73 3A 20 00
-     18	0039  15*(??)			 snum1	db 21 dup(?)
-     19	004E  15*(??)			 snum2 db 21 dup(?)
-     20	0063  ????			 num1 dw ?
-     21	0065  ????			 num2 dw ?
-     22	0067  ????			 Elmcd dw ?
-     23	0069  15*(??)			 smcd db 21 dup(?)
-     24
-     25	007E			     codeseg
-     26				     extrn mcd:proc
-     27				     extrn agets:proc
-     28				     extrn aputs:proc
-     29				     extrn itoa:proc
-     30				     extrn aatoi:proc
+     12	0017  45 6C 20 4D 43 44	20+	 msg3 db 'El MCD es: ',0
+     13	      65 73 3A 20 00
+     14	0023  15*(??)			 entrada  db 21	dup(?)
+     15	0038  ????			 num1 dw ?
+     16	003A  ????			 num2 dw ?
+     17	003C  ????			 Elmcd dw ?
+     18	003E  15*(??)			 smcd db 21 dup(?)
+     19
+     20	0053			     codeseg
+     21				     extrn mcd:proc, agets:proc,aputs:proc,itoa:proc,aatoi:proc,sscan:proc
+     22
+     23	0000			     inicio:
+     24	0000  B8 0000s			 mov ax,@data
+     25	0003  8E D8			 mov ds,ax
+     26	0005  8E C0			 mov es,ax
+     27
+     28					 ; 1. Pedir dato 1
+     29	0007  BE 0001r			 mov si, offset	msg1
+     30	000A  E8 0000e			 call aputs
      31
-     32	0000			     inicio:
-     33	0000  B8 0000s			 mov ax,@data
-     34	0003  8E D8			 mov ds,ax
-     35	0005  8E C0			 mov es,ax
+     32					 ; 2. Leer dato	1
+     33	000D  BF 0023r			 mov di, offset	entrada
+     34	0010  B9 0014			 mov cx, 20
+     35	0013  E8 0000e			 call agets
      36
-     37					 ; 1. Pedir dato 1
-     38	0007  BE 0001r			 mov si, offset	msg1
-     39	000A  E8 0000e			 call aputs
+     37					 ;3. Separar cadenas
+     38	0016  BE 0023r			 mov si, offset	entrada
+     39	0019  E8 0000e			 call sscan
      40
-     41					 ; 2. Leer dato	1
-     42	000D  BF 0039r			 mov di, offset	snum1
-     43	0010  B9 0014			 mov cx, 20
-     44	0013  E8 0000e			 call agets
+     41					 ;4. aplicar el	mcd
+     42					 ;mcd espera ax,dx
+     43	001C  E8 0000e			 call mcd
+     44	001F  A3 003Cr			 mov [Elmcd],ax	;guardamos el resultado
      45
-     46					 ; 3. Pedir dato 2
-     47	0016  BE 0017r			 mov si, offset	msg2
-     48	0019  E8 0000e			 call aputs
+     46					 ; 7. Imprimir "Resultado:
+     47	0022  BE 0017r			 mov si, offset	msg3
+     48	0025  E8 0000e			 call aputs
      49
-     50					 ; 4. Leer dato	2
-     51	001C  BF 004Er			 mov di, offset	snum2
-     52	001F  B9 0014			 mov cx, 20
-     53	0022  E8 0000e			 call agets
-     54
-     55					 ;5. convertir a int los numeros
-     56					 ;convetir num1
-     57	0025  BE 0039r			 mov si, offset	snum1
-Turbo Assembler	 Version 4.1	    11/23/25 15:41:10	    Page 2
+     50					 ;en este codigo especifico dx tiene trash
+     51	0028  33 D2			 xor dx,dx
+     52
+     53					 ; 8. Convertir	Numero (DX:AX) a Texto en mcd
+     54	002A  BF 003Er			 mov di, offset	smcd
+     55	002D  E8 0000e			 call itoa
+     56
+     57					 ; 9. Imprimir el numero convertido
+Turbo Assembler	 Version 4.1	    12/02/25 22:33:14	    Page 2
 main.ASM
 
 
 
-     58	0028  E8 0000e			 call aatoi	 ; Devuelve valor en AX
-     59	002B  A3 0063r			 mov [num1], ax
+     58	0030  BE 003Er			 mov si, offset	smcd
+     59	0033  E8 0000e			 call aputs
      60
-     61					 ;convertir num2
-     62	002E  BE 004Er			 mov si, offset	snum2
-     63	0031  E8 0000e			 call aatoi	 ; Devuelve valor en AX
-     64	0034  A3 0065r			 mov [num2], ax
+     61	0036			     fin:
+     62	0036  B4 4C			 mov ah, 04Ch
+     63	0038  A0 0000r			 mov al,[codsal]
+     64	003B  CD 21			 int 21h
      65
-     66					 ;6. aplicar el	mcd
-     67					 ;mcd espera ax,dx
-     68	0037  A1 0063r			 mov ax, [num1]
-     69	003A  8B 16 0065r		 mov dx, [num2]
-     70	003E  E8 0000e			 call mcd
-     71	0041  A3 0067r			 mov [Elmcd],ax	;guardamos el resultado
-     72
-     73					 ; 7. Imprimir "Resultado:
-     74	0044  BE 002Dr			 mov si, offset	msg3
-     75	0047  E8 0000e			 call aputs
-     76
-     77					 ;en este codigo especifico dx tiene trash
-     78	004A  33 D2			 xor dx,dx
-     79
-     80					 ; 8. Convertir	Numero (DX:AX) a Texto en mcd
-     81	004C  BF 0069r			 mov di, offset	smcd
-     82	004F  E8 0000e			 call itoa
-     83
-     84					 ; 9. Imprimir el numero convertido
-     85	0052  BE 0069r			 mov si, offset	smcd
-     86	0055  E8 0000e			 call aputs
-     87
-     88					 ; pausa
-     89	0058  B4 0C			 mov ah, 0Ch	 ; Funci?n DOS:	Limpiar	buffer del teclado
-     90	005A  B0 08			 mov al, 08h	 ; Funci?n DOS:	Leer car?cter sin eco
-     91	005C  CD 21			 int 21h	 ; Ejecutar: ?Esp?rate aqu? hasta que el usuario pulse algo!
-     92	005E			     fin:
-     93	005E  B8 004C			 mov ax, 04Ch
-     94	0061  A0 0000r			 mov al,[codsal]
-     95	0064  CD 21			 int 21h
-     96
-     97				     end inicio
-Turbo Assembler	 Version 4.1	    11/23/25 15:41:10	    Page 3
+     66				     end inicio
+Turbo Assembler	 Version 4.1	    12/02/25 22:33:14	    Page 3
 Symbol Table
 
 
@@ -113,9 +82,9 @@ Symbol Table
 
 Symbol Name			  Type	 Value
 
-??DATE				  Text	 "11/23/25"
+??DATE				  Text	 "12/02/25"
 ??FILENAME			  Text	 "main	  "
-??TIME				  Text	 "15:41:10"
+??TIME				  Text	 "22:33:14"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @CODE				  Text	 _TEXT
@@ -133,24 +102,23 @@ AATOI				  Near	 _TEXT:---- Extern
 AGETS				  Near	 _TEXT:---- Extern
 APUTS				  Near	 _TEXT:---- Extern
 CODSAL				  Byte	 DGROUP:0000
-ELMCD				  Word	 DGROUP:0067
-FIN				  Near	 _TEXT:005E
+ELMCD				  Word	 DGROUP:003C
+ENTRADA				  Byte	 DGROUP:0023
+FIN				  Near	 _TEXT:0036
 INICIO				  Near	 _TEXT:0000
 ITOA				  Near	 _TEXT:---- Extern
 MCD				  Near	 _TEXT:---- Extern
 MSG1				  Byte	 DGROUP:0001
-MSG2				  Byte	 DGROUP:0017
-MSG3				  Byte	 DGROUP:002D
-NUM1				  Word	 DGROUP:0063
-NUM2				  Word	 DGROUP:0065
-SMCD				  Byte	 DGROUP:0069
-SNUM1				  Byte	 DGROUP:0039
-SNUM2				  Byte	 DGROUP:004E
+MSG3				  Byte	 DGROUP:0017
+NUM1				  Word	 DGROUP:0038
+NUM2				  Word	 DGROUP:003A
+SMCD				  Byte	 DGROUP:003E
+SSCAN				  Near	 _TEXT:---- Extern
 
 Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
   STACK				  16  0100 Para	  Stack	  STACK
-  _DATA				  16  007E Word	  Public  DATA
-_TEXT				  16  0066 Word	  Public  CODE
+  _DATA				  16  0053 Word	  Public  DATA
+_TEXT				  16  003D Word	  Public  CODE
 

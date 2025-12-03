@@ -1,0 +1,13 @@
+Warning: DOSSEG directive ignored in module SUMACUAD.ASM
+Warning: DOSSEG directive ignored in module FUNC.ASM
+Warning: DOSSEG directive ignored in module ITOA.ASM
+Warning: DOSSEG directive ignored in module STR_IO.ASM
+
+ Start  Stop   Length Name               Class
+
+ 00000H 002C6H 002C7H _TEXT              CODE
+ 002D0H 0031BH 0004CH _DATA              DATA
+ 00320H 0041FH 00100H STACK              STACK
+
+Program entry point at 0000:0000
+

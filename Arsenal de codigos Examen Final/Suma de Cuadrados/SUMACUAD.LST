@@ -1,0 +1,153 @@
+Turbo Assembler	 Version 4.1	    12/01/25 22:59:58	    Page 1
+sumaCuad.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  45 73 63 72 69 62	65+	 msg1	db 'Escribe el limite: ', 0
+      9	      20 65 6C 20 6C 69	6D+
+     10	      69 74 65 3A 20 00
+     11	0015  0D 0A 45 6C 20 6D	61+	 msgRes	db 13, 10, 'El maximo N	es: ', 0
+     12	      78 69 6D 6F 20 4E	20+
+     13	      65 73 3A 20 00
+     14
+     15	0028  14*(??)			 buffer	db 20 dup(?)
+     16	003C  0A*(??)			 temp	db 10 dup(?)
+     17
+     18	0046  ????????			 limite	dd ?
+     19	004A  0000			 n_val	dw 0
+     20
+     21	004C			     codeseg
+     22					 extrn aputs:proc, agets:proc, aatoi:proc, itoa:proc
+     23
+     24	0000			     inicio:
+     25	0000  B8 0000s			 mov ax, @data
+     26	0003  8E D8			 mov ds, ax
+     27	0005  8E C0			 mov es, ax
+     28
+     29					 ; pedir limite
+     30	0007  BE 0001r			 mov si, offset	msg1
+     31	000A  E8 0000e			 call aputs
+     32
+     33	000D  BF 0028r			 mov di, offset	buffer
+     34	0010  B9 0013			 mov cx, 19
+     35	0013  E8 0000e			 call agets
+     36
+     37	0016  BE 0028r			 mov si, offset	buffer
+     38	0019  E8 0000e			 call aatoi	     ; convierte a numero en ax
+     39
+     40					 ; guardar limite
+     41	001C  A3 0046r			 mov [word ptr limite],	ax
+     42	001F  C7 06 0048r 0000		 mov [word ptr limite+2], 0
+     43
+     44					 ; preparar registros para comparar
+     45	0025  8B 1E 0046r		 mov bx, [word ptr limite]     ; limite	bajo
+     46	0029  8B 0E 0048r		 mov cx, [word ptr limite+2]   ; limite	alto
+     47
+     48	002D  33 C0			 xor ax, ax
+     49	002F  33 D2			 xor dx, dx
+     50	0031  33 F6			 xor si, si	 ; si =	suma acumulada baja
+     51	0033  33 FF			 xor di, di	 ; di =	suma acumulada alta
+     52	0035  C7 06 004Ar 0000		 mov [n_val], 0
+     53
+     54					 ; logica de suma de cuadrados
+     55	003B			     suma:
+     56	003B  FF 06 004Ar		 inc [n_val]	     ; n++
+     57
+Turbo Assembler	 Version 4.1	    12/01/25 22:59:58	    Page 2
+sumaCuad.ASM
+
+
+
+     58	003F  A1 004Ar			 mov ax, [n_val]
+     59	0042  F7 26 004Ar		 mul [n_val]	     ; ax = n *	n
+     60
+     61	0046  03 F0			 add si, ax	     ; acumular	cuadrado (parte	baja)
+     62	0048  13 FA			 adc di, dx	     ; acumular	cuadrado (parte	alta)
+     63
+     64					 ; comparar acumulado (di:si) contra limite (cx:bx)
+     65	004A  3B F9			 cmp di, cx
+     66	004C  77 0A			 ja pasado	     ; si acumulado > limite (alta) -> te pasaste
+     67	004E  72 EB			 jb suma	     ; si acumulado < limite (alta) -> siguele
+     68
+     69					 ; si partes altas iguales, checar bajas
+     70	0050  3B F3			 cmp si, bx
+     71	0052  77 04			 ja pasado	     ; si acumulado > limite (baja) -> te pasaste
+     72	0054  74 06			 je salir_ciclo	     ; si es exacto, terminamos
+     73
+     74	0056  EB E3			 jmp suma	     ; si es menor, siguele
+     75
+     76	0058			     pasado:
+     77	0058  FF 0E 004Ar		 dec [n_val]	     ; nos pasamos, regresa al ultimo valido
+     78
+     79	005C			     salir_ciclo:
+     80					 ; mostrar resultado
+     81	005C  BE 0015r			 mov si, offset	msgRes
+     82	005F  E8 0000e			 call aputs
+     83
+     84	0062  A1 004Ar			 mov ax, [n_val]
+     85	0065  33 D2			 xor dx, dx
+     86	0067  BF 003Cr			 mov di, offset	temp
+     87	006A  E8 0000e			 call itoa
+     88
+     89	006D  BE 003Cr			 mov si, offset	temp
+     90	0070  E8 0000e			 call aputs
+     91	0073			     salir:
+     92	0073  B4 4C			 mov ah, 04Ch
+     93	0075  A0 0000r			 mov al, [codsal]
+     94	0078  CD 21			 int 21h
+     95				     end inicio
+Turbo Assembler	 Version 4.1	    12/01/25 22:59:58	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/01/25"
+??FILENAME			  Text	 "sumaCuad"
+??TIME				  Text	 "22:59:58"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 SUMACUAD
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:0028
+CODSAL				  Byte	 DGROUP:0000
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+LIMITE				  Dword	 DGROUP:0046
+MSG1				  Byte	 DGROUP:0001
+MSGRES				  Byte	 DGROUP:0015
+N_VAL				  Word	 DGROUP:004A
+PASADO				  Near	 _TEXT:0058
+SALIR				  Near	 _TEXT:0073
+SALIR_CICLO			  Near	 _TEXT:005C
+SUMA				  Near	 _TEXT:003B
+TEMP				  Byte	 DGROUP:003C
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  004C Word	  Public  DATA
+_TEXT				  16  007A Word	  Public  CODE
+

@@ -1,0 +1,13 @@
+Warning: DOSSEG directive ignored in module FIBONA.ASM
+Warning: DOSSEG directive ignored in module FUNC.ASM
+Warning: DOSSEG directive ignored in module ITOA.ASM
+Warning: DOSSEG directive ignored in module STR_IO.ASM
+
+ Start  Stop   Length Name               Class
+
+ 00000H 002C2H 002C3H _TEXT              CODE
+ 002D0H 00337H 00068H _DATA              DATA
+ 00340H 0043FH 00100H STACK              STACK
+
+Program entry point at 0000:0000
+

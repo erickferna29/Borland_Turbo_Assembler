@@ -5,18 +5,16 @@ stack 256
 
 dataseg
     codsal db 0
-    msg1 db 'Escriba el numero 1: ', 0
-    msg2 db 'Escriba el numero 2: ',0
+    msg1 db 'Escriba la fraccion: ', 0
     msg3 db 'El MCD es: ',0
-    snum1  db 21 dup(?) 
-    snum2 db 21 dup(?) 
+    entrada  db 21 dup(?) 
     num1 dw ?
     num2 dw ?
     Elmcd dw ?
     smcd db 21 dup(?)
     
 codeseg
-extrn mcd:proc, agets:proc,aputs:proc,itoa:proc,aatoi:proc
+extrn mcd:proc, agets:proc,aputs:proc,itoa:proc,aatoi:proc,sscan:proc
 
 inicio:
     mov ax,@data
@@ -28,34 +26,16 @@ inicio:
     call aputs
     
     ; 2. Leer dato 1
-    mov di, offset snum1
+    mov di, offset entrada
     mov cx, 20
     call agets
     
-    ; 3. Pedir dato 2
-    mov si, offset msg2
-    call aputs
+    ;3. Separar cadenas
+    mov si, offset entrada
+    call sscan
     
-    ; 4. Leer dato 2
-    mov di, offset snum2
-    mov cx, 20
-    call agets
-
-    ;5. convertir a int los numeros
-    ;convetir num1
-    mov si, offset snum1
-    call aatoi      ; Devuelve valor en AX
-    mov [num1], ax
-    
-    ;convertir num2
-    mov si, offset snum2
-    call aatoi      ; Devuelve valor en AX
-    mov [num2], ax
-    
-    ;6. aplicar el mcd
-    ;mcd espera ax,dx
-    mov ax, [num1]
-    mov dx, [num2]
+    ;4. aplicar el mcd
+    ;mcd espera ax,bx
     call mcd
     mov [Elmcd],ax ;guardamos el resultado
     
@@ -73,13 +53,9 @@ inicio:
     ; 9. Imprimir el numero convertido
     mov si, offset smcd
     call aputs
-    
-    ; pausa
-    mov ah, 0Ch     ; funcion limpia buffer
-    mov al, 08h     ; Funcion leer caracter
-    int 21h         ; no ejecutes hasta que el usuario presione algo
+
 fin:
-    mov ax, 04Ch
+    mov ah, 04Ch
     mov al,[codsal]
     int 21h
     
