@@ -1,0 +1,158 @@
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:19	    Page 1
+str_io.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	aputs, agets
+      7
+      8				     ; PROCEDIMIENTO: APUTS
+      9
+     10	0000			     proc aputs
+     11	0000  50			 push ax
+     12	0001  52			 push dx
+     13	0002  56			 push si
+     14
+     15	0003			     @@ciclo_puts:
+     16	0003  AC			 lodsb		 ; Carga byte de [SI] en AL y hace inc SI
+     17	0004  3C 00			 cmp al, 0	 ; ?Es el fin de cadena?
+     18	0006  74 08			 jz @@fin_puts
+     19
+     20	0008  8A D0			 mov dl, al	 ; Prepara caracter para imprimir
+     21	000A  B4 02			 mov ah, 02h	 ; Servicio DOS: Imprimir caracter
+     22	000C  CD 21			 int 21h
+     23
+     24	000E  EB F3			 jmp @@ciclo_puts
+     25
+     26	0010			     @@fin_puts:
+     27	0010  5E			 pop si
+     28	0011  5A			 pop dx
+     29	0012  58			 pop ax
+     30	0013  C3			 ret
+     31	0014			     endp aputs
+     32
+     33				     ; PROCEDIMIENTO: AGETS con	borrado
+     34
+     35	0014			     proc agets
+     36	0014  50			 push ax
+     37	0015  53			 push bx
+     38	0016  51			 push cx
+     39	0017  57			 push di
+     40	0018  52			 push dx
+     41
+     42	0019  8B DF			 mov bx, di	 ; Guardamos en	BX la posici?n inicial (el tope	de concreto)
+     43	001B  FC			 cld		 ; Aseguramos que DI avance hacia adelante
+     44
+     45	001C			     @@leer:
+     46	001C  B4 08			 mov ah, 08h	 ; SERVICIO 08h: Lee teclado SIN imprimir en pantalla
+     47	001E  CD 21			 int 21h
+     48
+     49					 ; --- 1. CHECAR ENTER (ASCII 13) ---
+     50	0020  3C 0D			 cmp al, 13
+     51	0022  74 26			 je @@es_enter
+     52
+     53					 ; --- 2. CHECAR BACKSPACE (ASCII 8) ---
+     54	0024  3C 08			 cmp al, 8
+     55	0026  74 0C			 je @@es_backspace
+     56
+     57					 ; --- 3. CHECAR L?MITE	DEL BUFFER ---
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:19	    Page 2
+str_io.ASM
+
+
+
+     58	0028  E3 F2			 jcxz @@leer ; Si CX es	0 (no hay espacio), ignora la tecla
+     59
+     60					 ; --- 4. ES UNA LETRA NORMAL ---
+     61	002A  AA			 stosb		 ; Guarda AL en	[DI] y hace inc	DI
+     62	002B  49			 dec cx		 ; Resta 1 al contador de espacio disponible
+     63
+     64					 ; Imprimir manualmente	el caracter (Eco manual)
+     65	002C  8A D0			 mov dl, al
+     66	002E  B4 02			 mov ah, 02h
+     67	0030  CD 21			 int 21h
+     68
+     69	0032  EB E8			 jmp @@leer
+     70
+     71	0034			     @@es_backspace:
+     72					 ; Verificamos si estamos al principio del buffer
+     73	0034  3B FB			 cmp di, bx
+     74	0036  74 E4			 je @@leer ; Si	DI == BX, no hay nada que borrar, ignora.
+     75
+     76					 ; Si hay qu? borrar:
+     77	0038  4F			 dec di		 ; Regresa el puntero en memoria
+     78	0039  41			 inc cx		 ; Recupera un espacio en el contador
+     79
+     80					 ; Efecto visual de borrado:
+     81	003A  B4 02			 mov ah, 02h
+     82	003C  B2 08			 mov dl, 8	 ; Retroceso (Mueve cursor atr?s)
+     83	003E  CD 21			 int 21h
+     84	0040  B2 20			 mov dl, 32	 ; Espacio (Borra la letra visualmente)
+     85	0042  CD 21			 int 21h
+     86	0044  B2 08			 mov dl, 8	 ; Retroceso (Vuelve a colocar el cursor en su lugar)
+     87	0046  CD 21			 int 21h
+     88
+     89	0048  EB D2			 jmp @@leer
+     90
+     91	004A			     @@es_enter:
+     92	004A  B0 00			 mov al, 0	 ; Agregamos el	terminador nulo	al final de la cadena
+     93	004C  AA			 stosb
+     94
+     95					 ; Salto de l?nea visual para que se vea ordenado
+     96	004D  B4 02			 mov ah, 02h
+     97	004F  B2 0D			 mov dl, 13	 ; Retorno de carro
+     98	0051  CD 21			 int 21h
+     99	0053  B2 0A			 mov dl, 10	 ; Salto de l?nea
+    100	0055  CD 21			 int 21h
+    101
+    102	0057  5A			 pop dx
+    103	0058  5F			 pop di
+    104	0059  59			 pop cx
+    105	005A  5B			 pop bx
+    106	005B  58			 pop ax
+    107	005C  C3			 ret
+    108	005D			     endp agets
+    109
+    110					 end
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:19	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/03/25"
+??FILENAME			  Text	 "str_io  "
+??TIME				  Text	 "15:30:19"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CICLO_PUTS			  Near	 _TEXT:0003
+@@ES_BACKSPACE			  Near	 _TEXT:0034
+@@ES_ENTER			  Near	 _TEXT:004A
+@@FIN_PUTS			  Near	 _TEXT:0010
+@@LEER				  Near	 _TEXT:001C
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 STR_IO
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AGETS				  Near	 _TEXT:0014
+APUTS				  Near	 _TEXT:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  005D Word	  Public  CODE
+

@@ -236,33 +236,10 @@ proc astrcat
     stosb           ; Guardar letra en DI
     cmp al, 0       ; ?Fue el terminador nulo?
     jne @@copiar    ; Si no, seguir copiando
-   
+    
     pop di
     pop si
     pop ax
     ret
 endp astrcat
-proc astrcat2
-    push ax
-    push si
-    push di
-    
-    ; 1. Buscar el final de la cadena Destino (DI)
-    xor al, al      ; Buscamos el 0
-    cld
-@@buscar_fin:
-    scasb           ; Compara AL con [DI], avanza DI
-    jnz @@buscar_fin
-    dec di          ; Retroceder 1 para sobreescribir el 0
-    
-    ; 2. Copiar Fuente (SI) al final de Destino (DI)
-@@copiar:
-    lodsb           ; Cargar letra de SI en AL
-    stosb           ; Guardar letra en DI
-   
-    pop di
-    pop si
-    pop ax
-    ret
-    endp astrcat2
 end

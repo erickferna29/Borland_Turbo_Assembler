@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    12/03/25 17:43:08	    Page 1
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:26	    Page 1
 func.ASM
 
 
@@ -60,7 +60,7 @@ func.ASM
      55
      56					 ; sacamos de la pila
      57	002E  58			 pop ax
-Turbo Assembler	 Version 4.1	    12/03/25 17:43:08	    Page 2
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:26	    Page 2
 func.ASM
 
 
@@ -122,7 +122,7 @@ func.ASM
     112
     113
     114	006F  80 3C 42			     cmp     [byte si],	'B'    ; if([si] == ')
-Turbo Assembler	 Version 4.1	    12/03/25 17:43:08	    Page 3
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:26	    Page 3
 func.ASM
 
 
@@ -184,7 +184,7 @@ func.ASM
     169	00BA  57			     push   di
     170
     171	00BB  8B FE			     mov     di, si	       ; DI = SI
-Turbo Assembler	 Version 4.1	    12/03/25 17:43:08	    Page 4
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:26	    Page 4
 func.ASM
 
 
@@ -246,7 +246,7 @@ func.ASM
     226	00ED  32 C0			 xor al, al	 ; Buscamos el 0
     227	00EF  FC			 cld
     228	00F0			     @@buscar_fin:
-Turbo Assembler	 Version 4.1	    12/03/25 17:43:08	    Page 5
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:26	    Page 5
 func.ASM
 
 
@@ -267,31 +267,8 @@ func.ASM
     242	00FC  58			 pop ax
     243	00FD  C3			 ret
     244	00FE			     endp astrcat
-    245	00FE			     proc astrcat2
-    246	00FE  50			 push ax
-    247	00FF  56			 push si
-    248	0100  57			 push di
-    249
-    250					 ; 1. Buscar el	final de la cadena Destino (DI)
-    251	0101  32 C0			 xor al, al	 ; Buscamos el 0
-    252	0103  FC			 cld
-    253	0104			     @@buscar_fin:
-    254	0104  AE			 scasb		 ; Compara AL con [DI],	avanza DI
-    255	0105  75 FD			 jnz @@buscar_fin
-    256	0107  4F			 dec di		 ; Retroceder 1	para sobreescribir el 0
-    257
-    258					 ; 2. Copiar Fuente (SI) al final de Destino (DI)
-    259	0108			     @@copiar:
-    260	0108  AC			 lodsb		 ; Cargar letra	de SI en AL
-    261	0109  AA			 stosb		 ; Guardar letra en DI
-    262
-    263	010A  5F			 pop di
-    264	010B  5E			 pop si
-    265	010C  58			 pop ax
-    266	010D  C3			 ret
-    267	010E				 endp astrcat2
-    268				     end
-Turbo Assembler	 Version 4.1	    12/03/25 17:43:08	    Page 6
+    245				     end
+Turbo Assembler	 Version 4.1	    12/03/25 15:30:26	    Page 6
 Symbol Table
 
 
@@ -301,15 +278,13 @@ Symbol Name			  Type	 Value
 
 ??DATE				  Text	 "12/03/25"
 ??FILENAME			  Text	 "func	  "
-??TIME				  Text	 "17:43:08"
+??TIME				  Text	 "15:30:26"
 ??VERSION			  Number 040A
 @32BIT				  Text	 0
 @@BIN				  Near	 _TEXT:0081
 @@BUSCAROP			  Near	 _TEXT:0005
 @@BUSCAR_FIN			  Near	 _TEXT:00F0
-@@BUSCAR_FIN			  Near	 _TEXT:0104
 @@COPIAR			  Near	 _TEXT:00F4
-@@COPIAR			  Near	 _TEXT:0108
 @@DECR				  Near	 _TEXT:008A
 @@DO				  Near	 _TEXT:0095
 @@DO				  Near	 _TEXT:00D7
@@ -339,7 +314,6 @@ Symbol Name			  Type	 Value
 @WORDSIZE			  Text	 2
 AATOI				  Near	 _TEXT:0034
 ASTRCAT				  Near	 _TEXT:00EA
-ASTRCAT2			  Near	 _TEXT:00FE
 ASTRLEN				  Near	 _TEXT:00B9
 ASTRUPR				  Near	 _TEXT:00CB
 ATOU				  Near	 _TEXT:008D
@@ -352,5 +326,5 @@ Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
   _DATA				  16  0000 Word	  Public  DATA
-_TEXT				  16  010E Word	  Public  CODE
+_TEXT				  16  00FE Word	  Public  CODE
 

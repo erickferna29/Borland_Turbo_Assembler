@@ -1,0 +1,161 @@
+Turbo Assembler	 Version 4.1	    12/03/25 11:04:49	    Page 1
+str_io.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4
+      5	0000				 codeseg
+      6					 public	aputs, agets
+      7
+      8				     ; ==========================================================
+      9				     ; PROCEDIMIENTO: APUTS
+     10				     ; Imprime una cadena terminada en 0 (null-terminated)
+     11				     ; Entrada:	SI = Direcci?n de la cadena
+     12				     ; ==========================================================
+     13	0000			     proc aputs
+     14	0000  50			 push ax
+     15	0001  52			 push dx
+     16	0002  56			 push si
+     17
+     18	0003			     @@ciclo_puts:
+     19	0003  AC			 lodsb		 ; Carga byte de [SI] en AL y hace inc SI
+     20	0004  3C 00			 cmp al, 0	 ; ?Es el fin de cadena?
+     21	0006  74 08			 jz @@fin_puts
+     22
+     23	0008  8A D0			 mov dl, al	 ; Prepara caracter para imprimir
+     24	000A  B4 02			 mov ah, 02h	 ; Servicio DOS: Imprimir caracter
+     25	000C  CD 21			 int 21h
+     26
+     27	000E  EB F3			 jmp @@ciclo_puts
+     28
+     29	0010			     @@fin_puts:
+     30	0010  5E			 pop si
+     31	0011  5A			 pop dx
+     32	0012  58			 pop ax
+     33	0013  C3			 ret
+     34	0014			     endp aputs
+     35
+     36				     ; PROCEDIMIENTO: AGETS con	borrado
+     37
+     38	0014			     proc agets
+     39	0014  50			 push ax
+     40	0015  53			 push bx
+     41	0016  51			 push cx
+     42	0017  57			 push di
+     43	0018  52			 push dx
+     44
+     45	0019  8B DF			 mov bx, di	 ; Guardamos en	BX la posici?n inicial (el tope	de concreto)
+     46	001B  FC			 cld		 ; Aseguramos que DI avance hacia adelante
+     47
+     48	001C			     @@leer_ninja:
+     49	001C  B4 08			 mov ah, 08h	 ; SERVICIO 08h: Lee teclado SIN imprimir en pantalla
+     50	001E  CD 21			 int 21h
+     51
+     52					 ; --- 1. CHECAR ENTER (ASCII 13) ---
+     53	0020  3C 0D			 cmp al, 13
+     54	0022  74 26			 je @@es_enter
+     55
+     56					 ; --- 2. CHECAR BACKSPACE (ASCII 8) ---
+     57	0024  3C 08			 cmp al, 8
+Turbo Assembler	 Version 4.1	    12/03/25 11:04:49	    Page 2
+str_io.ASM
+
+
+
+     58	0026  74 0C			 je @@es_backspace
+     59
+     60					 ; --- 3. CHECAR L?MITE	DEL BUFFER ---
+     61	0028  E3 F2			 jcxz @@leer_ninja ; Si	CX es 0	(no hay	espacio), ignora la tecla
+     62
+     63					 ; --- 4. ES UNA LETRA NORMAL ---
+     64	002A  AA			 stosb		 ; Guarda AL en	[DI] y hace inc	DI
+     65	002B  49			 dec cx		 ; Resta 1 al contador de espacio disponible
+     66
+     67					 ; Imprimir manualmente	el caracter (Eco manual)
+     68	002C  8A D0			 mov dl, al
+     69	002E  B4 02			 mov ah, 02h
+     70	0030  CD 21			 int 21h
+     71
+     72	0032  EB E8			 jmp @@leer_ninja
+     73
+     74	0034			     @@es_backspace:
+     75					 ; Verificamos si estamos al principio del buffer
+     76	0034  3B FB			 cmp di, bx
+     77	0036  74 E4			 je @@leer_ninja ; Si DI == BX,	no hay nada que	borrar,	ignora.
+     78
+     79					 ; Si hay qu? borrar:
+     80	0038  4F			 dec di		 ; Regresa el puntero en memoria
+     81	0039  41			 inc cx		 ; Recupera un espacio en el contador
+     82
+     83					 ; Efecto visual de borrado:
+     84	003A  B4 02			 mov ah, 02h
+     85	003C  B2 08			 mov dl, 8	 ; Retroceso (Mueve cursor atr?s)
+     86	003E  CD 21			 int 21h
+     87	0040  B2 20			 mov dl, 32	 ; Espacio (Borra la letra visualmente)
+     88	0042  CD 21			 int 21h
+     89	0044  B2 08			 mov dl, 8	 ; Retroceso (Vuelve a colocar el cursor en su lugar)
+     90	0046  CD 21			 int 21h
+     91
+     92	0048  EB D2			 jmp @@leer_ninja
+     93
+     94	004A			     @@es_enter:
+     95	004A  B0 00			 mov al, 0	 ; Agregamos el	terminador nulo	al final de la cadena
+     96	004C  AA			 stosb
+     97
+     98					 ; Salto de l?nea visual para que se vea ordenado
+     99	004D  B4 02			 mov ah, 02h
+    100	004F  B2 0D			 mov dl, 13	 ; Retorno de carro
+    101	0051  CD 21			 int 21h
+    102	0053  B2 0A			 mov dl, 10	 ; Salto de l?nea
+    103	0055  CD 21			 int 21h
+    104
+    105	0057  5A			 pop dx
+    106	0058  5F			 pop di
+    107	0059  59			 pop cx
+    108	005A  5B			 pop bx
+    109	005B  58			 pop ax
+    110	005C  C3			 ret
+    111	005D			     endp agets
+    112
+    113					 end
+Turbo Assembler	 Version 4.1	    12/03/25 11:04:49	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/03/25"
+??FILENAME			  Text	 "str_io  "
+??TIME				  Text	 "11:04:49"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@@CICLO_PUTS			  Near	 _TEXT:0003
+@@ES_BACKSPACE			  Near	 _TEXT:0034
+@@ES_ENTER			  Near	 _TEXT:004A
+@@FIN_PUTS			  Near	 _TEXT:0010
+@@LEER_NINJA			  Near	 _TEXT:001C
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 STR_IO
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AGETS				  Near	 _TEXT:0014
+APUTS				  Near	 _TEXT:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  _DATA				  16  0000 Word	  Public  DATA
+_TEXT				  16  005D Word	  Public  CODE
+

@@ -1,0 +1,97 @@
+Turbo Assembler	 Version 4.1	    12/03/25 11:06:37	    Page 1
+main.ASM
+
+
+
+      1				     ideal
+      2				     dosseg
+      3	0000			     model small
+      4	0000			     stack 256
+      5
+      6	0100			     dataseg
+      7	0000  00			 codsal	db 0
+      8	0001  45 73 63 72 69 62	65+	 msg1	db 'Escribe tu nombre: ', 0
+      9	      20 74 75 20 6E 6F	6D+
+     10	      62 72 65 3A 20 00
+     11	0015  0D 0A 42 69 65 6E	76+	 msgRes	db 13, 10, 'Bienvenido sea , ',	0
+     12	      65 6E 69 64 6F 20	73+
+     13	      65 61 20 2C 20 00
+     14
+     15	0029  1E*(??)			 buffer	db 30 dup(?)
+     16
+     17	0047  ????????			 limite	dd ?
+     18	004B  0000			 n_val	dw 0
+     19
+     20	004D			     codeseg
+     21					 extrn aputs:proc, agets:proc, aatoi:proc, itoa:proc
+     22
+     23	0000			     inicio:
+     24	0000  B8 0000s			 mov ax, @data
+     25	0003  8E D8			 mov ds, ax
+     26	0005  8E C0			 mov es, ax
+     27
+     28					 ; pedir nombre
+     29	0007  BE 0001r			 mov si, offset	msg1
+     30	000A  E8 0000e			 call aputs
+     31
+     32					 ;Recibir nombre
+     33	000D  BF 0029r			 mov di, offset	buffer
+     34	0010  B9 001D			 mov cx, 29
+     35	0013  E8 0000e			 call agets
+     36
+     37					 ;Dar bienvenida
+     38	0016  BE 0015r			 mov si, offset	msgRes
+     39	0019  E8 0000e			 call aputs
+     40					 ;Dar nombre que nos dio
+     41	001C  BE 0029r			 mov si, offset	buffer
+     42	001F  E8 0000e			 call aputs
+     43
+     44	0022			     fin:
+     45	0022  B4 4C			 mov ah, 04Ch
+     46	0024  A0 0000r			 mov al, [codsal]
+     47	0027  CD 21			 int 21h
+     48				     end inicio
+Turbo Assembler	 Version 4.1	    12/03/25 11:06:37	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "12/03/25"
+??FILENAME			  Text	 "main	  "
+??TIME				  Text	 "11:06:37"
+??VERSION			  Number 040A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 0101H
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 MAIN
+@INTERFACE			  Text	 000H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+AATOI				  Near	 _TEXT:---- Extern
+AGETS				  Near	 _TEXT:---- Extern
+APUTS				  Near	 _TEXT:---- Extern
+BUFFER				  Byte	 DGROUP:0029
+CODSAL				  Byte	 DGROUP:0000
+FIN				  Near	 _TEXT:0022
+INICIO				  Near	 _TEXT:0000
+ITOA				  Near	 _TEXT:---- Extern
+LIMITE				  Dword	 DGROUP:0047
+MSG1				  Byte	 DGROUP:0001
+MSGRES				  Byte	 DGROUP:0015
+N_VAL				  Word	 DGROUP:004B
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  004D Word	  Public  DATA
+_TEXT				  16  0029 Word	  Public  CODE
+
